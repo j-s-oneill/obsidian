@@ -22,7 +22,6 @@ import com.zaradai.distributor.messaging.Message;
 import com.zaradai.distributor.messaging.MessagingService;
 import com.zaradai.events.EventAggregator;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Set;
 
