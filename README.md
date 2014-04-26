@@ -1,0 +1,4 @@
+obsidian
+========
+
+Distributed event aggregator
