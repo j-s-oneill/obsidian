@@ -18,21 +18,16 @@ package com.zaradai.distributor;
 import com.google.common.collect.Sets;
 import com.zaradai.distributor.messaging.Message;
 import com.zaradai.distributor.messaging.MessagingService;
-import com.zaradai.mocks.EventAggregatorMocker;
-import com.zaradai.mocks.MessagingServiceMocker;
 import com.zaradai.events.EventAggregator;
+import com.zaradai.mocks.EventAggregatorMocker;
 import com.zaradai.mocks.MessageMocker;
+import com.zaradai.mocks.MessagingServiceMocker;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class DistributorServiceTest {
     private static final Object TEST_EVENT = new Object();
