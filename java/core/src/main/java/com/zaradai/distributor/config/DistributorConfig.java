@@ -61,4 +61,5 @@ public interface DistributorConfig {
     boolean getKeepAlive();
     int getAcceptBacklog();
     boolean getReuseAddress();
+    int getConnectionTimeout();
 }

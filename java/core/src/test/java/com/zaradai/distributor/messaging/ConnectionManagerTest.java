@@ -77,6 +77,15 @@ public class ConnectionManagerTest {
     }
 
     @Test
+    public void shouldNotConnectForSimpleGet() throws Exception {
+        Connection res = uut.get(TEST_ADDRESS);
+
+        assertThat(res, is(TEST_CONNECTION));
+        verify(connectionFactory).create();
+        verify(clientFactory, never()).create(TEST_ADDRESS);
+    }
+
+    @Test
     public void shouldEnsureConnectionAtomicity() throws Exception {
         MockitoAnnotations.initMocks(this);
         final Connection EXISTING = ConnectionMocker.create();

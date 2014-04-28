@@ -44,6 +44,10 @@ public class ConnectionManager {
         return ImmutableSet.copyOf(connections.keySet());
     }
 
+    public Connection get(InetSocketAddress target) {
+        return get(target, false);
+    }
+
     public Connection get(InetSocketAddress target, boolean tryConnectIfAbsent) {
         Connection connection = connections.get(target);
 

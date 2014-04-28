@@ -28,7 +28,7 @@ public class KryoSerializer implements Serializer {
     private final Kryo kryo;
 
     @Inject
-    KryoSerializer(Kryo kryo) {
+    public KryoSerializer(Kryo kryo) {
         this.kryo = kryo;
     }
 

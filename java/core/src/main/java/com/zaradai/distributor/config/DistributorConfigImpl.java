@@ -31,6 +31,7 @@ public class DistributorConfigImpl implements DistributorConfig {
     static final String KEEP_ALIVE = PRE + ".keep.alive";
     static final String ACCEPT_BACKLOG = PRE + ".accept.backlog";
     static final String REUSE_ADDRESS = PRE + ".reuse.address";
+    static final String CONNECTION_TIMEOUT = PRE + ".connection.timeout";
 
     static final int DEFAULT_PORT = 1907;
     static final String DEFAULT_HOST = "localhost";
@@ -42,6 +43,7 @@ public class DistributorConfigImpl implements DistributorConfig {
     static final boolean DEFAULT_KEEP_ALIVE = true;
     static final int DEFAULT_ACCEPT_BACKLOG = 100;
     static final boolean DEFAULT_REUSE_ADDRESS = true;
+    static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
 
     private final ConfigurationSource source;
 
@@ -98,5 +100,10 @@ public class DistributorConfigImpl implements DistributorConfig {
     @Override
     public boolean getReuseAddress() {
         return source.get(REUSE_ADDRESS, DEFAULT_REUSE_ADDRESS);
+    }
+
+    @Override
+    public int getConnectionTimeout() {
+        return source.get(CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
     }
 }
