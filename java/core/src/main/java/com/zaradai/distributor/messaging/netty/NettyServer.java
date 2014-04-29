@@ -15,6 +15,7 @@
  */
 package com.zaradai.distributor.messaging.netty;
 
+import com.google.inject.Inject;
 import com.zaradai.distributor.config.DistributorConfig;
 import com.zaradai.distributor.messaging.MessagingException;
 import com.zaradai.distributor.messaging.Server;
@@ -53,11 +54,9 @@ public class NettyServer implements Server {
         }
     };
 
-    public NettyServer(
-            DistributorConfig config,
-            EventLoopGroups eventLoopGroups,
-            InitializerFactory initializerFactory,
-            ConnectionAuthenticatorHandler connectionAuthenticatorHandler) {
+    @Inject
+    NettyServer(DistributorConfig config, EventLoopGroups eventLoopGroups, InitializerFactory initializerFactory,
+                ConnectionAuthenticatorHandler connectionAuthenticatorHandler) {
         this.config = config;
         this.eventLoopGroups = eventLoopGroups;
         this.initializerFactory = initializerFactory;

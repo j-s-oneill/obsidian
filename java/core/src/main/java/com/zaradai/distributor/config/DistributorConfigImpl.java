@@ -21,29 +21,29 @@ import com.zaradai.config.ConfigurationSource;
 public class DistributorConfigImpl implements DistributorConfig {
     private static final String PRE = "net";
 
-    static final String PORT = PRE + ".port";
-    static final String HOST = PRE + ".host";
-    static final String RETRY_ATTEMPTS = PRE + ".retry.attempts";
-    static final String RETRY_DELAY = PRE + ".retry.delay";
-    static final String RETRY_MAX_DELAY = PRE + ".retry.max.delay";
-    static final String RETRY_USE_EXPONENTIAL = PRE + ".retry.use.exp";
-    static final String TCP_NO_DELAY = PRE + ".tcp.nodelay";
-    static final String KEEP_ALIVE = PRE + ".keep.alive";
-    static final String ACCEPT_BACKLOG = PRE + ".accept.backlog";
-    static final String REUSE_ADDRESS = PRE + ".reuse.address";
-    static final String CONNECTION_TIMEOUT = PRE + ".connection.timeout";
+    public static final String PORT = PRE + ".port";
+    public static final String HOST = PRE + ".host";
+    public static final String RETRY_ATTEMPTS = PRE + ".retry.attempts";
+    public static final String RETRY_DELAY = PRE + ".retry.delay";
+    public static final String RETRY_MAX_DELAY = PRE + ".retry.max.delay";
+    public static final String RETRY_USE_EXPONENTIAL = PRE + ".retry.use.exp";
+    public static final String TCP_NO_DELAY = PRE + ".tcp.nodelay";
+    public static final String KEEP_ALIVE = PRE + ".keep.alive";
+    public static final String ACCEPT_BACKLOG = PRE + ".accept.backlog";
+    public static final String REUSE_ADDRESS = PRE + ".reuse.address";
+    public static final String CONNECTION_TIMEOUT = PRE + ".connection.timeout";
 
-    static final int DEFAULT_PORT = 1907;
-    static final String DEFAULT_HOST = "localhost";
-    static final int DEFAULT_RETRY_ATTEMPTS = 5;
-    static final long DEFAULT_RETRY_DELAY = 1000;
-    static final long DEFAULT_RETRY_MAX_DELAY = 32000;
-    static final boolean DEFAULT_RETRY_USE_EXPONENTIAL = true;
-    static final boolean DEFAULT_TCP_NO_DELAY = true;
-    static final boolean DEFAULT_KEEP_ALIVE = true;
-    static final int DEFAULT_ACCEPT_BACKLOG = 100;
-    static final boolean DEFAULT_REUSE_ADDRESS = true;
-    static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
+    public static final int DEFAULT_PORT = 1907;
+    public static final String DEFAULT_HOST = "localhost";
+    public static final int DEFAULT_RETRY_ATTEMPTS = 5;
+    public static final long DEFAULT_RETRY_DELAY = 1000;
+    public static final long DEFAULT_RETRY_MAX_DELAY = 32000;
+    public static final boolean DEFAULT_RETRY_USE_EXPONENTIAL = true;
+    public static final boolean DEFAULT_TCP_NO_DELAY = true;
+    public static final boolean DEFAULT_KEEP_ALIVE = true;
+    public static final int DEFAULT_ACCEPT_BACKLOG = 100;
+    public static final boolean DEFAULT_REUSE_ADDRESS = true;
+    public static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
 
     private final ConfigurationSource source;
 
