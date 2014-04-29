@@ -18,8 +18,10 @@ package com.zaradai.distributor.messaging.impl;
 import com.google.common.collect.Sets;
 import com.zaradai.distributor.events.MessageErrorEvent;
 import com.zaradai.distributor.messaging.*;
+import com.zaradai.distributor.messaging.netty.EventLoopGroups;
 import com.zaradai.events.EventAggregator;
 import com.zaradai.mocks.*;
+import io.netty.channel.EventLoopGroup;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -39,13 +41,15 @@ public class DefaultMessagingServiceTest {
     private ConnectionManager connectionManager;
     private Server server;
     private DefaultMessagingService uut;
+    private EventLoopGroups eventLoopGroups;
 
     @Before
     public void setUp() throws Exception {
         eventAggregator = EventAggregatorMocker.create();
         connectionManager = ConnectionManagerMocker.create();
         server = ServerMocker.create();
-        uut = new DefaultMessagingService(eventAggregator, connectionManager, server);
+        eventLoopGroups = EventLoopGroupsMocker.create();
+        uut = new DefaultMessagingService(eventAggregator, connectionManager, server, eventLoopGroups);
     }
 
     @Test
@@ -62,6 +66,7 @@ public class DefaultMessagingServiceTest {
 
         verify(server).shutdown();
         verify(connectionManager).shutdown();
+        verify(eventLoopGroups).shutdown();
     }
 
     @Test

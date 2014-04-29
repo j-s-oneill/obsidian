@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractApplication {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractApplication.class);
     private Injector injector;
+    private Thread shutdownHook;
 
     public final void run() {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -39,14 +40,25 @@ public abstract class AbstractApplication {
             initialize();
             runApplication();
             shutdown(false);
+            removeShutdownHook();
         } catch (Exception e) {
             LOGGER.error("Application Failure", e);
         }
     }
 
     private void addShutdownHook() {
+        shutdownHook = createShutdownHook();
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
+    }
+
+    private void removeShutdownHook() {
+        Runtime.getRuntime().removeShutdownHook(shutdownHook);
+    }
+
+    private Thread createShutdownHook() {
         final Thread mainThread = Thread.currentThread();
-        Runtime.getRuntime().addShutdownHook(new Thread() {
+
+        Thread res = new Thread() {
             @Override
             public void run() {
                 LOGGER.info("Shutdown hook executing...");
@@ -57,7 +69,9 @@ public abstract class AbstractApplication {
                     LOGGER.error("Application failure in shutdown hook", e);
                 }
             }
-        });
+        };
+
+        return res;
     }
 
     private void loadConfiguration() throws ConfigurationException {
@@ -97,6 +111,5 @@ public abstract class AbstractApplication {
     protected abstract Iterable<? extends Module> getModules();
 
     protected void shutdown(boolean fromShutdownHook) {
-
     }
 }

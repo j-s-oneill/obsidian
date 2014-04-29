@@ -24,6 +24,7 @@ import com.zaradai.distributor.messaging.Message;
 import com.zaradai.distributor.messaging.MessagingException;
 import com.zaradai.distributor.messaging.MessagingService;
 import com.zaradai.distributor.messaging.Server;
+import com.zaradai.distributor.messaging.netty.EventLoopGroups;
 import com.zaradai.events.EventAggregator;
 
 import java.net.InetSocketAddress;
@@ -32,12 +33,14 @@ public class DefaultMessagingService extends AbstractIdleService implements Mess
     private final EventAggregator eventAggregator;
     private final ConnectionManager connectionManager;
     private final Server server;
+    private final EventLoopGroups eventLoopGroups;
 
     @Inject
-    DefaultMessagingService(EventAggregator eventAggregator, ConnectionManager connectionManager, Server server) {
+    DefaultMessagingService(EventAggregator eventAggregator, ConnectionManager connectionManager, Server server, EventLoopGroups eventLoopGroups) {
         this.eventAggregator = eventAggregator;
         this.connectionManager = connectionManager;
         this.server = server;
+        this.eventLoopGroups = eventLoopGroups;
     }
 
     @Override
@@ -51,6 +54,8 @@ public class DefaultMessagingService extends AbstractIdleService implements Mess
         server.shutdown();
         // Shutdown any active connections.
         connectionManager.shutdown();
+        // finally shutdown the event loops
+        eventLoopGroups.shutdown();
     }
 
     @Override
