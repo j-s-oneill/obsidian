@@ -21,25 +21,31 @@ import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.Inject;
 import com.zaradai.app.ApplicationService;
-import com.zaradai.distributor.events.ShutdownServiceEvent;
+import com.zaradai.distributor.events.*;
+import com.zaradai.distributor.messaging.Message;
 import com.zaradai.events.EventAggregator;
 import com.zaradai.util.Delay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class TestApplicationService extends AbstractIdleService implements ApplicationService{
     private static final Logger LOGGER = LoggerFactory.getLogger(TestApplicationService.class);
-    public static final int SLEEP_FOR = 5;
+    public static final int SLEEP_FOR = 30;
 
+    private final EventAggregator eventAggregator;
     private final DistributorService distributorService;
     private final ExecutorService executorService;
 
     @Inject
     TestApplicationService(EventAggregator eventAggregator, DistributorService distributorService,
                            ExecutorService executorService) {
+        this.eventAggregator = eventAggregator;
         this.distributorService = distributorService;
         this.executorService = executorService;
         eventAggregator.subscribe(this);
@@ -65,7 +71,43 @@ public class TestApplicationService extends AbstractIdleService implements Appli
 
     @Subscribe
     public void onShutdown(ShutdownServiceEvent event) {
-        LOGGER.debug("Shutdown event called...");
+        LOGGER.info("Shutdown Event handled...");
+
         stopAsync();
+    }
+
+    @Subscribe
+    public void onSendMessage(SendMessageEvent event) {
+        LOGGER.info("Send Message Event handled...");
+        if (event.getEvent() != null) {
+            Message message = new Message(event.getEvent());
+            try {
+                message.addTarget(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), event.getPort()));
+            } catch (UnknownHostException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+
+            eventAggregator.publish(message);
+        }
+    }
+
+    @Subscribe
+    public void onMessageErrorEvent(MessageErrorEvent event) {
+        LOGGER.info("Message Error, Msg: {}, Cause: {}", event.getMessage(), event.getCause());
+    }
+
+    @Subscribe
+    public void onMessageSentEvent(MessageSentEvent event) {
+        LOGGER.info("Message Sent...");
+    }
+
+    @Subscribe
+    public void onNodeConnectedEvent(NodeConnectedEvent event) {
+        LOGGER.info("Node Connected {}", event.getAddress());
+    }
+
+    @Subscribe
+    public void onNodeDisconnectedEvent(NodeDisconnectedEvent event) {
+        LOGGER.info("Node Disconnected {}", event.getAddress());
     }
 }

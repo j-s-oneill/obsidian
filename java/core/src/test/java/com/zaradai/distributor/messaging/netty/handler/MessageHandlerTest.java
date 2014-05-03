@@ -35,6 +35,7 @@ import static org.mockito.Mockito.*;
 
 public class MessageHandlerTest {
     private static final int TEST_PORT = 345;
+    private static final int LISTEN_PORT = 346;
     private static final Message TEST_MESSAGE = MessageMocker.create();
     private EventAggregator eventAggregator;
     private DistributorConfig config;
@@ -48,7 +49,7 @@ public class MessageHandlerTest {
     public void setUp() throws Exception {
         eventAggregator = EventAggregatorMocker.create();
         config = DistributorConfigMocker.create();
-        when(config.getPort()).thenReturn(TEST_PORT);
+        when(config.getPort()).thenReturn(LISTEN_PORT);
         connectionManager = ConnectionManagerMocker.create();
         connection = NettyConnectionMocker.create();
         ctx = mock(ChannelHandlerContext.class);

@@ -1,6 +1,10 @@
 package com.zaradai.distributor;
 
+import com.google.common.util.concurrent.Uninterruptibles;
+import com.zaradai.distributor.events.SendMessageEvent;
 import org.junit.Test;
+
+import java.util.concurrent.*;
 
 /**
  * Copyright 2014 Zaradai
@@ -21,8 +25,31 @@ import org.junit.Test;
 public class LocalhostTest {
     @Test
     public void shouldRunTest() throws Exception {
-        TestApp app1 = new TestApp(1703);
+        ExecutorService taskExecutor = Executors.newFixedThreadPool(2);
+        CompletionService<Void> completionService = new ExecutorCompletionService<Void>(taskExecutor);
 
-        app1.run();
+        TestApp app1 = new TestApp(1703);
+        TestApp app2 = new TestApp(1704);
+
+        addTest(completionService,  app1);
+        addTest(completionService,  app2);
+
+        Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
+
+        app1.postEvent(new SendMessageEvent(1704, new SendMessageEvent()));
+        //app2.postEvent(new SendMessageEvent(1703, new SendMessageEvent()));
+        //app2.postEvent(new SendMessageEvent(1704, new SendMessageEvent()));
+
+        completionService.take().get();
+        completionService.take().get();
+    }
+
+    private void addTest(CompletionService<Void> completionService, final TestApp app) {
+        completionService.submit(new Runnable() {
+            @Override
+            public void run() {
+                app.run();
+            }
+        }, null);
     }
 }

@@ -20,6 +20,7 @@ import com.google.inject.Module;
 import com.zaradai.app.AbstractApplication;
 import com.zaradai.config.ConfigurationSource;
 import com.zaradai.distributor.config.DistributorConfigImpl;
+import com.zaradai.events.EventAggregator;
 
 import java.util.concurrent.ExecutorService;
 
@@ -28,6 +29,10 @@ public class TestApp extends AbstractApplication {
 
     public TestApp(int port) {
         this.port = port;
+    }
+
+    public void postEvent(Object event) {
+        getInjector().getInstance(EventAggregator.class).publish(event);
     }
 
     @Override

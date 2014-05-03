@@ -86,8 +86,8 @@ public class MessageHandler extends SimpleChannelInboundHandler<Message> {
         Connection res = null;
         // get the connection for the address
         InetSocketAddress address = (InetSocketAddress) channel.remoteAddress();
-        // only add if the remote address port is listening port otherwise it is outgoing???
-        if (address.getPort() == config.getPort()) {
+        // only add if the remote address port is not listening port.
+        if (address.getPort() != config.getPort()) {
             res = connectionManager.get(address);
         }
 

@@ -28,6 +28,8 @@ import io.netty.channel.ChannelFutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
+
 public class NettyConnection extends AbstractPendingCacheConnection {
     private static final Logger LOGGER = LoggerFactory.getLogger(NettyConnection.class);
     private final EventAggregator eventAggregator;
@@ -46,6 +48,7 @@ public class NettyConnection extends AbstractPendingCacheConnection {
 
     @Override
     protected void doSend(final Message message) throws MessagingException {
+        message.setSource((InetSocketAddress) channel.localAddress());
         channel.writeAndFlush(message).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
