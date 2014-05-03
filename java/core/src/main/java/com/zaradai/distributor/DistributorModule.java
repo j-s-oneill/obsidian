@@ -24,6 +24,7 @@ import com.zaradai.config.ConfigurationSource;
 import com.zaradai.config.InMemoryConfigurationSource;
 import com.zaradai.distributor.config.DistributorConfig;
 import com.zaradai.distributor.config.DistributorConfigImpl;
+import com.zaradai.distributor.events.EventPublisher;
 import com.zaradai.distributor.messaging.Client;
 import com.zaradai.distributor.messaging.ClientFactory;
 import com.zaradai.distributor.messaging.Connection;
@@ -35,6 +36,7 @@ import com.zaradai.distributor.messaging.impl.DefaultMessagingService;
 import com.zaradai.distributor.messaging.netty.EventLoopGroups;
 import com.zaradai.distributor.messaging.netty.NettyClient;
 import com.zaradai.distributor.messaging.netty.NettyConnection;
+import com.zaradai.distributor.messaging.netty.NettyEventPublisher;
 import com.zaradai.distributor.messaging.netty.NettyServer;
 import com.zaradai.distributor.messaging.netty.handler.InitializerFactory;
 import com.zaradai.distributor.messaging.netty.handler.MessageDecoderFactory;
@@ -72,6 +74,7 @@ public class DistributorModule extends AbstractModule {
         // netty
         bind(Server.class).to(NettyServer.class);
         bind(EventLoopGroups.class).in(Singleton.class);
+        bind(EventPublisher.class).to(NettyEventPublisher.class);
 
         install(new FactoryModuleBuilder()
                 .implement(Connection.class, NettyConnection.class).build(ConnectionFactory.class));

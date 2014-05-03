@@ -15,11 +15,11 @@
  */
 package com.zaradai.distributor.messaging.netty;
 
+import com.zaradai.distributor.events.EventPublisher;
 import com.zaradai.distributor.events.MessageErrorEvent;
 import com.zaradai.distributor.events.MessageSentEvent;
 import com.zaradai.distributor.messaging.Message;
-import com.zaradai.events.EventAggregator;
-import com.zaradai.mocks.EventAggregatorMocker;
+import com.zaradai.mocks.EventPublisherMocker;
 import com.zaradai.mocks.MessageMocker;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
 public class NettyConnectionTest {
     private static final Message TEST_MESSAGE = MessageMocker.create();
     private static final Throwable TEST_CAUSE = new Exception();
-    private EventAggregator eventAggregator;
+    private EventPublisher eventPublisher;
     private NettyConnection uut;
     @Mock
     private Channel channel;
@@ -55,8 +55,8 @@ public class NettyConnectionTest {
         when(channel.closeFuture()).thenReturn(closeFuture);
         when(channel.writeAndFlush(TEST_MESSAGE)).thenReturn(channelFuture);
 
-        eventAggregator = EventAggregatorMocker.create();
-        uut = new NettyConnection(eventAggregator);
+        eventPublisher = EventPublisherMocker.create();
+        uut = new NettyConnection(eventPublisher);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class NettyConnectionTest {
         // use the captured listener to trigger a publish
         captor.getValue().operationComplete(channelFuture);
 
-        verify(eventAggregator).publish(any(MessageSentEvent.class));
+        verify(eventPublisher).publish(any(MessageSentEvent.class));
     }
 
     @Test
@@ -86,7 +86,7 @@ public class NettyConnectionTest {
         // use the captured listener to trigger a publish
         captor.getValue().operationComplete(channelFuture);
 
-        verify(eventAggregator).publish(any(MessageErrorEvent.class));
+        verify(eventPublisher).publish(any(MessageErrorEvent.class));
     }
 
     @Test

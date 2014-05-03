@@ -16,12 +16,11 @@
 package com.zaradai.distributor.messaging.netty.handler;
 
 import com.zaradai.distributor.config.DistributorConfig;
-import com.zaradai.distributor.events.NodeConnectedEvent;
+import com.zaradai.distributor.events.EventPublisher;
 import com.zaradai.distributor.events.NodeDisconnectedEvent;
 import com.zaradai.distributor.messaging.ConnectionManager;
 import com.zaradai.distributor.messaging.Message;
 import com.zaradai.distributor.messaging.netty.NettyConnection;
-import com.zaradai.events.EventAggregator;
 import com.zaradai.mocks.*;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -37,17 +36,17 @@ public class MessageHandlerTest {
     private static final int TEST_PORT = 345;
     private static final int LISTEN_PORT = 346;
     private static final Message TEST_MESSAGE = MessageMocker.create();
-    private EventAggregator eventAggregator;
     private DistributorConfig config;
     private ConnectionManager connectionManager;
     private ChannelHandlerContext ctx;
     private Channel channel;
     private NettyConnection connection;
     private InetSocketAddress address;
+    private EventPublisher eventPublisher;
 
     @Before
     public void setUp() throws Exception {
-        eventAggregator = EventAggregatorMocker.create();
+        eventPublisher = EventPublisherMocker.create();
         config = DistributorConfigMocker.create();
         when(config.getPort()).thenReturn(LISTEN_PORT);
         connectionManager = ConnectionManagerMocker.create();
@@ -58,11 +57,12 @@ public class MessageHandlerTest {
         address = new InetSocketAddress("127.0.0.1", TEST_PORT);
         when(channel.remoteAddress()).thenReturn(address);
         when(connectionManager.get(address)).thenReturn(connection);
+
     }
 
     @Test
     public void shouldUpdateConnectionChannelOnActivation() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, true);
+        MessageHandler uut = new MessageHandler(eventPublisher, config, connectionManager, true);
 
         uut.channelActive(ctx);
 
@@ -71,16 +71,16 @@ public class MessageHandlerTest {
 
     @Test
     public void shouldPublishEventOnChannelActivation() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, true);
+        MessageHandler uut = new MessageHandler(eventPublisher, config, connectionManager, true);
 
         uut.channelActive(ctx);
 
-        verify(eventAggregator).publish(any(NodeConnectedEvent.class));
+        verify(eventPublisher).publish(any(NodeDisconnectedEvent.class));
     }
 
     @Test
     public void shouldUpdateConnectionChannelOnDeactivation() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, true);
+        MessageHandler uut = new MessageHandler(eventPublisher, config, connectionManager, true);
 
         uut.channelInactive(ctx);
 
@@ -89,29 +89,28 @@ public class MessageHandlerTest {
 
     @Test
     public void shouldPublishEventOnChannelDeactivation() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, true);
+        MessageHandler uut = new MessageHandler(eventPublisher, config, connectionManager, true);
 
         uut.channelInactive(ctx);
 
-        verify(eventAggregator).publish(any(NodeDisconnectedEvent.class));
+        verify(eventPublisher).publish(any(NodeDisconnectedEvent.class));
     }
 
     @Test
     public void shouldPublishMessageIfAClient() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, true);
+        MessageHandler uut = new MessageHandler(eventPublisher, config, connectionManager, true);
 
         uut.messageReceived(ctx, TEST_MESSAGE);
 
-        verify(eventAggregator).publish(TEST_MESSAGE);
+        verify(eventPublisher).publish(TEST_MESSAGE);
     }
 
     @Test
     public void shouldNotPublishMessageIfAServer() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, false);
+        MessageHandler uut = new MessageHandler(eventPublisher, config, connectionManager, false);
 
         uut.messageReceived(ctx, TEST_MESSAGE);
 
-        verify(eventAggregator, never()).publish(TEST_MESSAGE);
+        verify(eventPublisher, never()).publish(TEST_MESSAGE);
     }
-
 }

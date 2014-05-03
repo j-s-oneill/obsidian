@@ -18,13 +18,13 @@ package com.zaradai.distributor.messaging.netty.handler;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.zaradai.distributor.config.DistributorConfig;
+import com.zaradai.distributor.events.EventPublisher;
 import com.zaradai.distributor.events.NodeConnectedEvent;
 import com.zaradai.distributor.events.NodeDisconnectedEvent;
 import com.zaradai.distributor.messaging.Connection;
 import com.zaradai.distributor.messaging.ConnectionManager;
 import com.zaradai.distributor.messaging.Message;
 import com.zaradai.distributor.messaging.netty.NettyConnection;
-import com.zaradai.events.EventAggregator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -35,15 +35,15 @@ import java.net.InetSocketAddress;
 
 public class MessageHandler extends SimpleChannelInboundHandler<Message> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageHandler.class);
-    private final EventAggregator eventAggregator;
     private final DistributorConfig config;
     private final ConnectionManager connectionManager;
     private final Boolean clientHandler;
+    private final EventPublisher eventPublisher;
 
     @Inject
-    MessageHandler(EventAggregator eventAggregator, DistributorConfig config, ConnectionManager connectionManager,
+    MessageHandler(EventPublisher eventPublisher, DistributorConfig config, ConnectionManager connectionManager,
                    @Assisted Boolean clientHandler) {
-        this.eventAggregator = eventAggregator;
+        this.eventPublisher = eventPublisher;
         this.config = config;
         this.connectionManager = connectionManager;
         this.clientHandler = clientHandler;
@@ -78,7 +78,7 @@ public class MessageHandler extends SimpleChannelInboundHandler<Message> {
     @Override
     protected void messageReceived(ChannelHandlerContext channelHandlerContext, Message message) throws Exception {
         if (clientHandler) {
-            eventAggregator.publish(message);
+            publish(message);
         }
     }
 
@@ -96,11 +96,15 @@ public class MessageHandler extends SimpleChannelInboundHandler<Message> {
 
     private void publishNodeDisconnected(Channel channel) {
         NodeConnectedEvent event = new NodeConnectedEvent((InetSocketAddress) channel.remoteAddress());
-        eventAggregator.publish(event);
+        publish(event);
     }
 
     private void publishNodeConnected(Channel channel) {
         NodeDisconnectedEvent event = new NodeDisconnectedEvent((InetSocketAddress) channel.remoteAddress());
-        eventAggregator.publish(event);
+        publish(event);
+    }
+
+    private void publish(final Object event) {
+        eventPublisher.publish(event);
     }
 }

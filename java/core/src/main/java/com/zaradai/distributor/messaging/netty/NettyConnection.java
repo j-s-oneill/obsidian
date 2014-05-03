@@ -16,12 +16,12 @@
 package com.zaradai.distributor.messaging.netty;
 
 import com.google.inject.Inject;
+import com.zaradai.distributor.events.EventPublisher;
 import com.zaradai.distributor.events.MessageErrorEvent;
 import com.zaradai.distributor.events.MessageSentEvent;
 import com.zaradai.distributor.messaging.AbstractPendingCacheConnection;
 import com.zaradai.distributor.messaging.Message;
 import com.zaradai.distributor.messaging.MessagingException;
-import com.zaradai.events.EventAggregator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -32,7 +32,7 @@ import java.net.InetSocketAddress;
 
 public class NettyConnection extends AbstractPendingCacheConnection {
     private static final Logger LOGGER = LoggerFactory.getLogger(NettyConnection.class);
-    private final EventAggregator eventAggregator;
+    private final EventPublisher eventPublisher;
     private volatile Channel channel;
     private final ChannelFutureListener channelCloseHandler = new ChannelFutureListener() {
         @Override
@@ -42,8 +42,8 @@ public class NettyConnection extends AbstractPendingCacheConnection {
     };
 
     @Inject
-    NettyConnection(EventAggregator eventAggregator) {
-        this.eventAggregator = eventAggregator;
+    NettyConnection(EventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -54,13 +54,17 @@ public class NettyConnection extends AbstractPendingCacheConnection {
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
                 if (channelFuture.isSuccess()) {
                     //post a sent message
-                    eventAggregator.publish(new MessageSentEvent(message));
+                    publish(new MessageSentEvent(message));
                 } else {
                     // post a failure message
-                    eventAggregator.publish(new MessageErrorEvent(message, channelFuture.cause().getMessage()));
+                    publish(new MessageErrorEvent(message, channelFuture.cause().getMessage()));
                 }
             }
         });
+    }
+
+    private void publish(final Object event) {
+        eventPublisher.publish(event);
     }
 
     @Override
