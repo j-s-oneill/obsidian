@@ -36,7 +36,8 @@ public class DefaultMessagingService extends AbstractIdleService implements Mess
     private final EventLoopGroups eventLoopGroups;
 
     @Inject
-    DefaultMessagingService(EventAggregator eventAggregator, ConnectionManager connectionManager, Server server, EventLoopGroups eventLoopGroups) {
+    DefaultMessagingService(EventAggregator eventAggregator, ConnectionManager connectionManager, Server server,
+                            EventLoopGroups eventLoopGroups) {
         this.eventAggregator = eventAggregator;
         this.connectionManager = connectionManager;
         this.server = server;

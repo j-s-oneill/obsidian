@@ -41,11 +41,4 @@ public class TestModule extends DistributorModule {
         // bind an executor service to run the testing code on
         bind(ExecutorService.class).toInstance(executorService);
     }
-
-    @Override
-    protected void bindConfig() {
-        // override and setup InMemory for the test
-        bind(ConfigurationSource.class).to(InMemoryConfigurationSource.class).asEagerSingleton();
-        bind(DistributorConfig.class).to(DistributorConfigImpl.class);
-    }
 }

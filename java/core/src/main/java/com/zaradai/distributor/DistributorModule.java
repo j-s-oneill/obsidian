@@ -21,7 +21,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.zaradai.config.ConfigurationSource;
-import com.zaradai.config.PropertiesConfigurationSource;
+import com.zaradai.config.InMemoryConfigurationSource;
 import com.zaradai.distributor.config.DistributorConfig;
 import com.zaradai.distributor.config.DistributorConfigImpl;
 import com.zaradai.distributor.messaging.Client;
@@ -94,7 +94,7 @@ public class DistributorModule extends AbstractModule {
     }
 
     protected void bindConfig() {
-        bind(ConfigurationSource.class).to(PropertiesConfigurationSource.class).asEagerSingleton();
+        bind(ConfigurationSource.class).to(InMemoryConfigurationSource.class).asEagerSingleton();
         bind(DistributorConfig.class).to(DistributorConfigImpl.class);
     }
 }
