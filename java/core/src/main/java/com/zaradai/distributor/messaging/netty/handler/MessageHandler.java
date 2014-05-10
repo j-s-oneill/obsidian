@@ -16,21 +16,10 @@
 package com.zaradai.distributor.messaging.netty.handler;
 
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-import com.zaradai.distributor.config.DistributorConfig;
-import com.zaradai.distributor.events.NodeConnectedEvent;
-import com.zaradai.distributor.events.NodeDisconnectedEvent;
-import com.zaradai.distributor.messaging.Connection;
-import com.zaradai.distributor.messaging.ConnectionManager;
 import com.zaradai.distributor.messaging.Message;
 import com.zaradai.events.EventAggregator;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.net.InetSocketAddress;
 
 public class MessageHandler extends SimpleChannelInboundHandler<Message> {
     private final EventAggregator eventAggregator;

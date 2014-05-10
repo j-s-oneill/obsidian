@@ -21,7 +21,10 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
-public class InetSocketAddressSerializer {
+public final class InetSocketAddressSerializer {
+    private InetSocketAddressSerializer() {
+    }
+
     public static void serialize(InetSocketAddress address, ByteBuf out) {
         byte[] bytes = address.getAddress().getAddress();
         out.writeInt(bytes.length);

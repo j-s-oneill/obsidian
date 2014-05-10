@@ -23,7 +23,6 @@ import com.zaradai.distributor.messaging.ConnectionManager;
 import com.zaradai.distributor.messaging.Message;
 import com.zaradai.distributor.messaging.MessagingException;
 import com.zaradai.distributor.messaging.MessagingService;
-import com.zaradai.distributor.messaging.netty.EventLoopGroups;
 import com.zaradai.events.EventAggregator;
 
 import java.net.InetSocketAddress;

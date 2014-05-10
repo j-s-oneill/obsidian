@@ -24,8 +24,6 @@ import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
-import java.net.InetSocketAddress;
-
 public class MessageEncoder extends MessageToByteEncoder<Message> {
     private final Serializer serializer;
 

@@ -17,14 +17,11 @@ package com.zaradai.distributor.messaging;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 public abstract class AbstractPendingConnection implements Connection {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Connection.class);
     private final BlockingQueue<Message> pendingQueue;
 
     protected AbstractPendingConnection() {
@@ -48,13 +45,6 @@ public abstract class AbstractPendingConnection implements Connection {
             }
             // attempt to connect
             connect();
-        }
-
-
-        if (!isConnected()) {
-
-        } else {
-            doSend(message);
         }
     }
 

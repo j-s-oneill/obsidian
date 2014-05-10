@@ -34,6 +34,7 @@ import java.net.UnknownHostException;
 public class MessagingHandshake extends AbstractHandshakeHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessagingHandshake.class);
     private static final int PROTOCOL_HEADER = 0xFA45A99;
+    public static final int HEADER_INT_SIZE = 4;
     private final DistributorConfig config;
     private final ConnectionManager connectionManager;
     private int serverHeaderSize = -1;
@@ -116,7 +117,7 @@ public class MessagingHandshake extends AbstractHandshakeHandler {
 
     private boolean canReadServerHeader(ByteBuf in) {
         if (serverHeaderSize == -1) {
-            if (in.readableBytes() >= 4) {
+            if (in.readableBytes() >= HEADER_INT_SIZE) {
                 serverHeaderSize = in.readInt();
             } else {
                 return false;
@@ -127,7 +128,7 @@ public class MessagingHandshake extends AbstractHandshakeHandler {
     }
 
     private boolean canReadClientHeader(ByteBuf in) {
-        return in.readableBytes() >= 4;
+        return in.readableBytes() >= HEADER_INT_SIZE;
     }
 
     private void writeProtocolHeader(ByteBuf out) {

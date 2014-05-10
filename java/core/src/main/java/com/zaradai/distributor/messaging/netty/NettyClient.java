@@ -18,12 +18,18 @@ package com.zaradai.distributor.messaging.netty;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.zaradai.distributor.config.DistributorConfig;
-import com.zaradai.distributor.messaging.Connection;
-import com.zaradai.distributor.messaging.netty.handler.*;
+import com.zaradai.distributor.messaging.netty.handler.HandshakeHandlerFactory;
+import com.zaradai.distributor.messaging.netty.handler.MessageDecoderFactory;
+import com.zaradai.distributor.messaging.netty.handler.MessageEncoderFactory;
+import com.zaradai.distributor.messaging.netty.handler.MessageHandlerFactory;
 import com.zaradai.net.retry.RetryPolicy;
 import com.zaradai.net.retry.RetryPolicyBuilder;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
@@ -82,7 +88,7 @@ public class NettyClient {
                 final ChannelFuture fut = channelFuture;
 
                 if (channelFuture.isSuccess()) {
-                    connected(fut.channel());
+                    connected();
                 } else {
                     eventLoopGroups.getClientGroup().submit(new Runnable() {
                         @Override
@@ -90,7 +96,7 @@ public class NettyClient {
                             if (retryPolicy.retry()) {
                                 connect(retryPolicy);
                             } else {
-                                failed(fut.channel(), fut.cause());
+                                failed(fut.cause());
                             }
                         }
                     });
@@ -99,12 +105,12 @@ public class NettyClient {
         });
     }
 
-    private void failed(Channel channel, Throwable cause) {
+    private void failed(Throwable cause) {
         // not needed remove after dev
         LOGGER.warn("Unable to connect to {}", endpoint, cause);
     }
 
-    private void connected(Channel channel) {
+    private void connected() {
         // not needed remove after dev
         LOGGER.info("Connected to {}", endpoint);
     }

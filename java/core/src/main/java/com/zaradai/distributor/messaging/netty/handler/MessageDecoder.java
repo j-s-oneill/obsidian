@@ -24,10 +24,6 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.UUID;
-
 public class MessageDecoder extends LengthFieldBasedFrameDecoder {
     private static final int MAX_MESSAGE_SIZE = 1024 * 1024;
     private static final int LENGTH_SIZE = 4;

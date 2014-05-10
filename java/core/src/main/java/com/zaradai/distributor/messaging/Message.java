@@ -21,7 +21,6 @@ import com.google.common.collect.Sets;
 
 import java.net.InetSocketAddress;
 import java.util.Set;
-import java.util.UUID;
 
 public class Message {
     public static final int MAGIC_NUMBER = 0xFA4527D8;

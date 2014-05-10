@@ -20,9 +20,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import io.netty.handler.ssl.SslHandshakeCompletionEvent;
 import io.netty.util.concurrent.DefaultPromise;
-import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import org.slf4j.Logger;
@@ -39,10 +37,9 @@ public abstract class AbstractHandshakeHandler extends ByteToMessageDecoder {
     private final boolean client;
     private final long handshakeTimeout;
 
-    private ChannelHandlerContext ctx;
     private static final MessagingException HANDSHAKE_TIMED_OUT = new MessagingException("Handshake timed out");
     private static final MessagingException CHANNEL_CLOSED = new MessagingException("channel closed");
-    private final LazyChannelPromise handshakePromise = new LazyChannelPromise();
+    private DefaultPromise<Channel> handshakePromise;
     private boolean inErrorAndClosing;
 
     protected AbstractHandshakeHandler(boolean isClient, long handshakeTimeout) {
@@ -51,54 +48,53 @@ public abstract class AbstractHandshakeHandler extends ByteToMessageDecoder {
     }
 
     @Override
-    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        this.ctx = ctx;
-
-        if (ctx.channel().isActive()) {
-            handshake();
+    public void handlerAdded(ChannelHandlerContext handlerContext) throws Exception {
+        if (handlerContext.channel().isActive()) {
+            handshake(handlerContext);
         }
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        handshake();
-        ctx.fireChannelActive();
+    public void channelActive(ChannelHandlerContext handlerContext) throws Exception {
+        handshake(handlerContext);
+        handlerContext.fireChannelActive();
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    public void channelInactive(ChannelHandlerContext handlerContext) throws Exception {
         // connection has closed during handshake
-        notifyHandshakeFailure(CHANNEL_CLOSED);
-        super.channelInactive(ctx);
+        notifyHandshakeFailure(handlerContext, CHANNEL_CLOSED);
+        super.channelInactive(handlerContext);
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext handlerContext, ByteBuf in, List<Object> out) throws Exception {
         if (canRead(client, in)) {
             if (client) {
-                decodeAsClient(ctx, in);
+                decodeAsClient(handlerContext, in);
             } else {
-                decodeAsServer(ctx, in);
+                decodeAsServer(handlerContext, in);
             }
         }
     }
 
-    protected abstract boolean canRead(boolean client, ByteBuf in);
+    protected abstract boolean canRead(boolean isClient, ByteBuf in);
     protected abstract void clientWrite(ByteBuf buffer);
     protected abstract void serverWrite(ByteBuf buffer);
     protected abstract boolean serverReadAndValidate(ChannelHandlerContext ctx, ByteBuf in);
     protected abstract boolean clientReadAndValidate(ChannelHandlerContext ctx, ByteBuf in);
 
-    private Future<Channel> handshake() {
+    private Future<Channel> handshake(final ChannelHandlerContext handlerContext) {
+        handshakePromise = new DefaultPromise<Channel>(handlerContext.executor());
         final ScheduledFuture<?> timeoutFuture;
         if (handshakeTimeout > 0) {
-            timeoutFuture = ctx.executor().schedule( new Runnable() {
+            timeoutFuture = handlerContext.executor().schedule(new Runnable() {
                 @Override
                 public void run() {
                     if (handshakePromise.isDone()) {
                         return;
                     }
-                    notifyHandshakeFailure(HANDSHAKE_TIMED_OUT);
+                    notifyHandshakeFailure(handlerContext, HANDSHAKE_TIMED_OUT);
                 }
             }, handshakeTimeout, TimeUnit.MILLISECONDS);
         } else {
@@ -115,87 +111,76 @@ public abstract class AbstractHandshakeHandler extends ByteToMessageDecoder {
         });
 
         try {
-            beginHandshake();
+            beginHandshake(handlerContext);
         } catch (Exception e) {
-            notifyHandshakeFailure(e);
+            notifyHandshakeFailure(handlerContext, e);
         }
 
         return handshakePromise;
     }
 
-    private void beginHandshake() {
+    private void beginHandshake(ChannelHandlerContext handlerContext) {
         if (client) {
-            final ByteBuf buffer = ctx.alloc().buffer(BUFFER_SIZE);
+            final ByteBuf buffer = handlerContext.alloc().buffer(BUFFER_SIZE);
             clientWrite(buffer);
-            ctx.writeAndFlush(buffer);
+            handlerContext.writeAndFlush(buffer);
         }
     }
 
 
-    private void decodeAsServer(ChannelHandlerContext ctx, ByteBuf in) {
-        if (serverReadAndValidate(ctx, in)) {
-            final ByteBuf buffer = ctx.alloc().buffer(BUFFER_SIZE);
+    private void decodeAsServer(ChannelHandlerContext handlerContext, ByteBuf in) {
+        if (serverReadAndValidate(handlerContext, in)) {
+            final ByteBuf buffer = handlerContext.alloc().buffer(BUFFER_SIZE);
             serverWrite(buffer);
-            ctx.writeAndFlush(buffer);
-            notifyHandshakeSuccess();
+            handlerContext.writeAndFlush(buffer);
+            notifyHandshakeSuccess(handlerContext);
         } else {
-            notifyHandshakeFailure(new MessagingException("Invalid Header"));
+            notifyHandshakeFailure(handlerContext, new MessagingException("Invalid Header"));
         }
     }
 
 
 
 
-    private void decodeAsClient(ChannelHandlerContext ctx, ByteBuf in) {
-        if (clientReadAndValidate(ctx, in)) {
-            notifyHandshakeSuccess();
+    private void decodeAsClient(ChannelHandlerContext handlerContext, ByteBuf in) {
+        if (clientReadAndValidate(handlerContext, in)) {
+            notifyHandshakeSuccess(handlerContext);
         } else {
-            notifyHandshakeFailure(new MessagingException("Invalid Header"));
+            notifyHandshakeFailure(handlerContext, new MessagingException("Invalid Header"));
         }
     }
 
-    private void notifyHandshakeSuccess() {
-        removeFromPipeline();
+    private void notifyHandshakeSuccess(ChannelHandlerContext handlerContext) {
+        removeFromPipeline(handlerContext);
 
         try {
-            handshakePromise.setSuccess(ctx.channel());
-            ctx.fireUserEventTriggered(HandshakeCompletionEvent.SUCCESS);
+            handshakePromise.setSuccess(handlerContext.channel());
+            handlerContext.fireUserEventTriggered(HandshakeCompletionEvent.SUCCESS);
             LOGGER.info("Success");
         } catch (IllegalStateException e) {
             LOGGER.debug("Unable to set success", e);
-            ctx.fireUserEventTriggered(new HandshakeCompletionEvent(e));
-            ctx.close();
+            handlerContext.fireUserEventTriggered(new HandshakeCompletionEvent(e));
+            handlerContext.close();
         }
     }
 
-    private void removeFromPipeline() {
+    private void removeFromPipeline(ChannelHandlerContext handlerContext) {
         LOGGER.debug("Handshake done removing from pipeline");
-        ctx.pipeline().remove(this);
+        handlerContext.pipeline().remove(this);
     }
 
-    private void notifyHandshakeFailure(Throwable cause) {
-        removeFromPipeline();
+    private void notifyHandshakeFailure(ChannelHandlerContext handlerContext, Throwable cause) {
+        removeFromPipeline(handlerContext);
 
         if (!inErrorAndClosing) {
             try {
                 inErrorAndClosing = true;
                 handshakePromise.setFailure(cause);
             } finally {
-                ctx.fireUserEventTriggered(new HandshakeCompletionEvent(cause));
-                ctx.close();
+                handlerContext.fireUserEventTriggered(new HandshakeCompletionEvent(cause));
+                handlerContext.close();
                 LOGGER.info("Failure in handshake", cause);
             }
         }
     }
-
-    private final class LazyChannelPromise extends DefaultPromise<Channel> {
-        @Override
-        protected EventExecutor executor() {
-            if (ctx == null) {
-                throw new IllegalStateException();
-            }
-            return ctx.executor();
-        }
-    }
-
 }

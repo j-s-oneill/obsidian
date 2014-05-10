@@ -74,8 +74,8 @@ public class ChannelConnection extends AbstractPendingConnection {
         }
     }
 
-    private void logActivity(Channel channel) {
-        if (channel != null) {
+    private void logActivity(Channel toSet) {
+        if (toSet != null) {
             LOGGER.info("Activating: {}", endpoint);
         } else {
             LOGGER.info("Deactivating: {}", endpoint);

@@ -16,7 +16,6 @@
 package com.zaradai.distributor.messaging;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -25,7 +24,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 public class ConnectionManager {
