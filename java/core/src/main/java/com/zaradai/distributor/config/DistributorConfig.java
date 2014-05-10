@@ -62,4 +62,6 @@ public interface DistributorConfig {
     int getAcceptBacklog();
     boolean getReuseAddress();
     int getConnectionTimeout();
+
+    long getHandshakeTimeout();
 }

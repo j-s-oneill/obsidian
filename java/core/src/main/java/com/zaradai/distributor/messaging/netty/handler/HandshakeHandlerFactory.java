@@ -13,15 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zaradai.mocks;
+package com.zaradai.distributor.messaging.netty.handler;
 
-import com.zaradai.distributor.messaging.netty.NettyConnection;
-
-import static org.mockito.Mockito.mock;
-
-public class NettyConnectionMocker {
-
-    public static NettyConnection create() {
-        return mock(NettyConnection.class);
-    }
+public interface HandshakeHandlerFactory {
+    MessagingHandshake create(Boolean isClient);
 }

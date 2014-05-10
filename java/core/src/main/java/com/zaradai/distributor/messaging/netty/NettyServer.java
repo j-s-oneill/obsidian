@@ -18,16 +18,18 @@ package com.zaradai.distributor.messaging.netty;
 import com.google.inject.Inject;
 import com.zaradai.distributor.config.DistributorConfig;
 import com.zaradai.distributor.messaging.MessagingException;
-import com.zaradai.distributor.messaging.Server;
-import com.zaradai.distributor.messaging.netty.handler.ConnectionAuthenticatorHandler;
-import com.zaradai.distributor.messaging.netty.handler.InitializerFactory;
+import com.zaradai.distributor.messaging.netty.handler.HandshakeHandlerFactory;
+import com.zaradai.distributor.messaging.netty.handler.MessageDecoderFactory;
+import com.zaradai.distributor.messaging.netty.handler.MessageEncoderFactory;
+import com.zaradai.distributor.messaging.netty.handler.MessageHandlerFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.channel.socket.ServerSocketChannel;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.concurrent.GlobalEventExecutor;
@@ -37,13 +39,15 @@ import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-public class NettyServer implements Server {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
+public class NettyServer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NettyServer.class);
 
     private final DistributorConfig config;
     private final EventLoopGroups eventLoopGroups;
-    private final InitializerFactory initializerFactory;
-    private final ConnectionAuthenticatorHandler connectionAuthenticatorHandler;
+    private final MessageEncoderFactory messageEncoderFactory;
+    private final MessageDecoderFactory messageDecoderFactory;
+    private final MessageHandlerFactory messageHandlerFactory;
+    private final HandshakeHandlerFactory handshakeHandlerFactory;
     private final DefaultChannelGroup serverChannelGroup;
     private final ServerBootstrap bootstrap;
 
@@ -55,22 +59,26 @@ public class NettyServer implements Server {
     };
 
     @Inject
-    NettyServer(DistributorConfig config, EventLoopGroups eventLoopGroups, InitializerFactory initializerFactory,
-                ConnectionAuthenticatorHandler connectionAuthenticatorHandler) {
+    NettyServer(DistributorConfig config,
+                EventLoopGroups eventLoopGroups,
+                MessageEncoderFactory messageEncoderFactory,
+                MessageDecoderFactory messageDecoderFactory,
+                MessageHandlerFactory messageHandlerFactory,
+                HandshakeHandlerFactory handshakeHandlerFactory) {
         this.config = config;
         this.eventLoopGroups = eventLoopGroups;
-        this.initializerFactory = initializerFactory;
-        this.connectionAuthenticatorHandler = connectionAuthenticatorHandler;
+        this.messageEncoderFactory = messageEncoderFactory;
+        this.messageDecoderFactory = messageDecoderFactory;
+        this.messageHandlerFactory = messageHandlerFactory;
+        this.handshakeHandlerFactory = handshakeHandlerFactory;
         serverChannelGroup = new DefaultChannelGroup("Server Accept Channels", GlobalEventExecutor.INSTANCE);
         bootstrap = createBootstrap();
     }
 
-    @Override
     public void listen() throws MessagingException {
         bootstrap.bind(getBindAddress(), config.getPort()).addListener(bound);
     }
 
-    @Override
     public void shutdown() throws MessagingException {
         try {
             serverChannelGroup.close().await();
@@ -84,18 +92,33 @@ public class NettyServer implements Server {
                 .group(eventLoopGroups.getServerGroup(), eventLoopGroups.getClientGroup())
                 .channel(NioServerSocketChannel.class);
         configure(res);
-        res.handler(createAcceptorInitializer());
-        res.childHandler(initializerFactory.create(false));
+        //res.handler(createAcceptorInitializer());
+        res.childHandler(createClientInitializer());
 
         return res;
     }
 
-    private ChannelInitializer<ServerSocketChannel> createAcceptorInitializer() {
-        return new ChannelInitializer<ServerSocketChannel>() {
+//    private ChannelInitializer<ServerSocketChannel> createAcceptorInitializer() {
+//        return new ChannelInitializer<ServerSocketChannel>() {
+//            @Override
+//            protected void initChannel(ServerSocketChannel channel) throws Exception {
+//                channel.pipeline().addLast(connectionAuthenticatorHandler);
+//                channel.pipeline().addLast(new LoggingHandler("ACCEPTOR"));  // remove once dev complete
+//            }
+//        };
+//    }
+
+    private ChannelInitializer<SocketChannel> createClientInitializer() {
+        return new ChannelInitializer<SocketChannel>() {
             @Override
-            protected void initChannel(ServerSocketChannel channel) throws Exception {
-                channel.pipeline().addLast(connectionAuthenticatorHandler);
-                channel.pipeline().addLast(new LoggingHandler("ACCEPTOR"));  // remove once dev complete
+            protected void initChannel(SocketChannel ch) throws Exception {
+                ChannelPipeline pipeline = ch.pipeline();
+
+                pipeline.addLast(new LoggingHandler("SERVER-CLIENT"));
+                pipeline.addLast("handshake", handshakeHandlerFactory.create(false));
+                pipeline.addLast("decoder", messageDecoderFactory.create());
+                pipeline.addLast("encoder", messageEncoderFactory.create());
+                pipeline.addLast("handler", messageHandlerFactory.create());
             }
         };
     }

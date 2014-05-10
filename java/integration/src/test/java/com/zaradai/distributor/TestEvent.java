@@ -13,8 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zaradai.distributor.messaging;
+package com.zaradai.distributor;
 
-public interface Client {
-    void connect(Connection connection);
+public class TestEvent {
+    private int test;
+
+    public TestEvent() {
+        test = 42;
+    }
+
+    public int getTest() {
+        return test;
+    }
+
+    public void setTest(int test) {
+        this.test = test;
+    }
 }

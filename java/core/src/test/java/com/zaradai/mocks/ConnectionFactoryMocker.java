@@ -25,11 +25,4 @@ public class ConnectionFactoryMocker {
     public static ConnectionFactory create() {
         return mock(ConnectionFactory.class);
     }
-
-    public static ConnectionFactory create(Connection connection) {
-        ConnectionFactory res = create();
-        when(res.create()).thenReturn(connection);
-
-        return res;
-    }
 }

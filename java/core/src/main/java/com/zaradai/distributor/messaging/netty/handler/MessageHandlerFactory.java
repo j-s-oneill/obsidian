@@ -16,5 +16,5 @@
 package com.zaradai.distributor.messaging.netty.handler;
 
 public interface MessageHandlerFactory {
-    MessageHandler create(boolean clientHandler);
+    MessageHandler create();
 }

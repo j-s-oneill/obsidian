@@ -21,37 +21,21 @@ import com.google.common.collect.Sets;
 
 import java.net.InetSocketAddress;
 import java.util.Set;
-import java.util.UUID;
 
 public class Message {
     public static final int MAGIC_NUMBER = 0xFA4527D8;
 
-    private UUID id;
     private Set<InetSocketAddress> targets;
     private InetSocketAddress source;
     private Object event;
     private boolean incoming;
 
     public Message() {
-        id = UUID.randomUUID();
         targets = createTargetSet();
-    }
-
-    public Message(Object event) {
-        this();
-        setEvent(event);
     }
 
     protected Set<InetSocketAddress> createTargetSet() {
         return Sets.newHashSet();
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
     public InetSocketAddress getSource() {
@@ -89,5 +73,31 @@ public class Message {
 
     public void clearTargets() {
         targets.clear();
+    }
+
+    public static class Builder {
+        private final Message message;
+        public Builder() {
+            message = new Message();
+        }
+
+        public Builder event(Object event) {
+            message.setEvent(event);
+            return this;
+        }
+
+        public Builder addTarget(InetSocketAddress address) {
+            message.addTarget(address);
+            return this;
+        }
+
+        public Message build() {
+            return message;
+        }
+
+        public Builder from(InetSocketAddress address) {
+            message.setSource(address);
+            return this;
+        }
     }
 }

@@ -15,63 +15,77 @@
  */
 package com.zaradai.distributor.messaging;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 public class ConnectionManager {
-    private final ConcurrentMap<InetSocketAddress, Connection> connections;
+    private final ConcurrentMap<InetSocketAddress, Connection> activeConnections;
     private final ConnectionFactory connectionFactory;
-    private final ClientFactory clientFactory;
 
     @Inject
-    ConnectionManager(ConnectionFactory connectionFactory, ClientFactory clientFactory) {
+    ConnectionManager(ConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
-        this.clientFactory = clientFactory;
-        connections = createConnectionsMap();
+        activeConnections = createConnectionsMap();
     }
 
     protected ConcurrentMap<InetSocketAddress, Connection> createConnectionsMap() {
         return Maps.newConcurrentMap();
     }
 
-    public Set<InetSocketAddress> getKnownAddresses() {
-        return ImmutableSet.copyOf(connections.keySet());
+    public void add(InetSocketAddress endpoint, Connection connection) {
+        activeConnections.put(endpoint, connection);
     }
 
-    public Connection get(InetSocketAddress target) {
-        return get(target, false);
+    public void remove(InetSocketAddress endpoint) {
+        activeConnections.remove(endpoint);
     }
 
-    public Connection get(InetSocketAddress target, boolean tryConnectIfAbsent) {
-        Connection connection = connections.get(target);
+    public List<InetSocketAddress> getKnownAddresses() {
+        return ImmutableList.copyOf(activeConnections.keySet());
+    }
 
-        if (connection == null) {
-            connection = connectionFactory.create();
-            // add atomically
-            Connection existing = connections.putIfAbsent(target, connection);
+    public Connection getForEndpoint(InetSocketAddress endpoint) {
+        return activeConnections.get(endpoint);
+    }
 
-            if (existing == null) {
-                if (tryConnectIfAbsent) {
-                    // ask a client to setup a connection to the target
-                    clientFactory.create(target).connect(connection);
-                }
-            } else {
-                connection = existing;
+    public List<Connection> getForAddress(InetAddress address) {
+        List<Connection> res = Lists.newArrayList();
+
+        for (Map.Entry<InetSocketAddress, Connection> entry : activeConnections.entrySet()) {
+            if (entry.getKey().getAddress().equals(address)) {
+                res.add(entry.getValue());
             }
+        }
+
+        return res;
+    }
+
+    public List<Connection> getAll() {
+        return ImmutableList.copyOf(activeConnections.values());
+    }
+
+    public Connection getOrCreate(InetSocketAddress endpoint) {
+        Connection connection = connectionFactory.create(endpoint);
+        Connection previous = activeConnections.putIfAbsent(endpoint, connection);
+
+        if (previous != null) {
+            return previous;
         }
 
         return connection;
     }
 
     public void shutdown() {
-        for (Map.Entry<InetSocketAddress, Connection> entry : connections.entrySet()) {
-            entry.getValue().shutdown();
+        for (Connection connection : getAll()) {
+            connection.shutdown();
         }
     }
 }

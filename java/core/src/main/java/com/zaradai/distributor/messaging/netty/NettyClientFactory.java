@@ -13,14 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zaradai.mocks;
+package com.zaradai.distributor.messaging.netty;
 
-import com.zaradai.distributor.messaging.Client;
+import java.net.InetSocketAddress;
 
-import static org.mockito.Mockito.mock;
-
-public class ClientMocker {
-    public static Client create() {
-        return mock(Client.class);
-    }
+public interface NettyClientFactory {
+    NettyClient create(InetSocketAddress endpoint);
 }

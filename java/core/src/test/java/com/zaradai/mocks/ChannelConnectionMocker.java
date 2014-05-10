@@ -13,9 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zaradai.distributor.messaging;
+package com.zaradai.mocks;
 
-public interface Server {
-    void listen() throws MessagingException;
-    void shutdown() throws MessagingException;
+import com.zaradai.distributor.messaging.netty.ChannelConnection;
+
+import static org.mockito.Mockito.mock;
+
+public class ChannelConnectionMocker {
+
+    public static ChannelConnection create() {
+        return mock(ChannelConnection.class);
+    }
 }

@@ -25,11 +25,4 @@ public class MessageHandlerFactoryMocker {
     public static MessageHandlerFactory create() {
         return mock(MessageHandlerFactory.class);
     }
-
-    public static MessageHandlerFactory create(boolean clientHandler, MessageHandler messageHandler) {
-        MessageHandlerFactory res = create();
-        when(res.create(clientHandler)).thenReturn(messageHandler);
-
-        return res;
-    }
 }
