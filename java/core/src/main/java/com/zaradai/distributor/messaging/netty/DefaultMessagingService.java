@@ -19,7 +19,11 @@ import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.inject.Inject;
 import com.zaradai.distributor.events.EventPublisher;
 import com.zaradai.distributor.events.MessageErrorEvent;
-import com.zaradai.distributor.messaging.*;
+import com.zaradai.distributor.messaging.Connection;
+import com.zaradai.distributor.messaging.ConnectionManager;
+import com.zaradai.distributor.messaging.Message;
+import com.zaradai.distributor.messaging.MessagingException;
+import com.zaradai.distributor.messaging.MessagingService;
 
 import java.net.InetSocketAddress;
 

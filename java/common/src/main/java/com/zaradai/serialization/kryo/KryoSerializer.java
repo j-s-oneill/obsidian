@@ -33,7 +33,7 @@ public class KryoSerializer implements Serializer {
     }
 
     @Override
-    public void serialize(OutputStream out, Object object) {
+    public synchronized void serialize(OutputStream out, Object object) {
         Output output = createOutput(out);
         kryo.writeClassAndObject(output, object);
         output.flush();
@@ -45,7 +45,7 @@ public class KryoSerializer implements Serializer {
     }
 
     @Override
-    public Object deserialize(InputStream in) {
+    public synchronized Object deserialize(InputStream in) {
         return kryo.readClassAndObject(createInput(in));
     }
 

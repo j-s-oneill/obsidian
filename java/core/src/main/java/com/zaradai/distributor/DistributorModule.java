@@ -29,7 +29,11 @@ import com.zaradai.distributor.messaging.Connection;
 import com.zaradai.distributor.messaging.ConnectionFactory;
 import com.zaradai.distributor.messaging.ConnectionManager;
 import com.zaradai.distributor.messaging.MessagingService;
-import com.zaradai.distributor.messaging.netty.*;
+import com.zaradai.distributor.messaging.netty.ChannelConnection;
+import com.zaradai.distributor.messaging.netty.DefaultMessagingService;
+import com.zaradai.distributor.messaging.netty.EventLoopGroups;
+import com.zaradai.distributor.messaging.netty.NettyClientFactory;
+import com.zaradai.distributor.messaging.netty.NettyEventPublisher;
 import com.zaradai.distributor.messaging.netty.handler.HandshakeHandlerFactory;
 import com.zaradai.distributor.messaging.netty.handler.MessageDecoderFactory;
 import com.zaradai.distributor.messaging.netty.handler.MessageEncoderFactory;
@@ -77,7 +81,7 @@ public class DistributorModule extends AbstractModule {
 
     protected void bindSerialization() {
         bind(Kryo.class).toInstance(kryo);
-        bind(Serializer.class).to(KryoSerializer.class);
+        bind(Serializer.class).to(KryoSerializer.class).in(Singleton.class);
     }
 
     protected void bindEventAggregator() {

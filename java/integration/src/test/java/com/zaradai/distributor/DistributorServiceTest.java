@@ -23,6 +23,7 @@ import com.zaradai.distributor.config.DistributorConfig;
 import com.zaradai.distributor.config.DistributorConfigImpl;
 import com.zaradai.distributor.messaging.Message;
 import com.zaradai.events.EventAggregator;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.net.InetAddress;
@@ -30,32 +31,41 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
 public class DistributorServiceTest {
-    @Test
-    public void shouldRun() throws Exception {
-        Injector injector1 = createInjector();
+    private Injector injector1;
+    private DistributorConfig config1;
+    private Injector injector2;
+    private DistributorConfig config2;
+    private Injector injector3;
+    private DistributorConfig config3;
+    private DistributorService distributorService1;
+    private DistributorService distributorService2;
+    private DistributorService distributorService3;
+
+    @Before
+    public void setUp() throws Exception {
+        injector1 = createInjector();
         ConfigurationSource source = injector1.getInstance(ConfigurationSource.class);
-        DistributorConfig config1 = injector1.getInstance(DistributorConfig.class);
+        config1 = injector1.getInstance(DistributorConfig.class);
         source.set(DistributorConfigImpl.PORT, 1708);
 
-        Injector injector2 = createInjector();
+        injector2 = createInjector();
         ConfigurationSource source2 = injector2.getInstance(ConfigurationSource.class);
-        DistributorConfig config2 = injector2.getInstance(DistributorConfig.class);
+        config2 = injector2.getInstance(DistributorConfig.class);
         source2.set(DistributorConfigImpl.PORT, 1709);
 
-        Injector injector3 = createInjector();
+        injector3 = createInjector();
         ConfigurationSource source3 = injector3.getInstance(ConfigurationSource.class);
-        DistributorConfig config3 = injector3.getInstance(DistributorConfig.class);
+        config3 = injector3.getInstance(DistributorConfig.class);
         source3.set(DistributorConfigImpl.PORT, 1710);
 
-        DistributorService distributorService1 = injector1.getInstance(DistributorService.class);
-        distributorService1.startAsync().awaitRunning();
+        distributorService1 = injector1.getInstance(DistributorService.class);
+        distributorService2 = injector2.getInstance(DistributorService.class);
+        distributorService3 = injector3.getInstance(DistributorService.class);
+    }
 
-        DistributorService distributorService2 = injector2.getInstance(DistributorService.class);
-        distributorService2.startAsync().awaitRunning();
-
-        DistributorService distributorService3 = injector3.getInstance(DistributorService.class);
-        distributorService3.startAsync().awaitRunning();
-
+    @Test
+    public void shouldRun() throws Exception {
+        startDistributors();
         // sleep a bit
         Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
 
@@ -71,11 +81,48 @@ public class DistributorServiceTest {
         EventAggregator agg1 = injector1.getInstance(EventAggregator.class);
         agg1.publish(message);
 
-        Uninterruptibles.sleepUninterruptibly(20, TimeUnit.SECONDS);
+        Uninterruptibles.sleepUninterruptibly(8, TimeUnit.SECONDS);
 
+        stopDistributors();
+    }
+
+    @Test
+    public void shouldRunMultiple() throws Exception {
+        startDistributors();
+        // sleep a bit
+        Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
+
+        InetAddress local = InetAddress.getByName(config1.getHost());
+
+        EventAggregator agg1 = injector1.getInstance(EventAggregator.class);
+
+        for (int i = 0; i < 20; ++i) {
+            Message message = new Message.Builder()
+                    .event(new TestEvent())
+                    .addTarget(new InetSocketAddress(local, config2.getPort()))
+                    .addTarget(new InetSocketAddress(local, config3.getPort()))
+                    .from(new InetSocketAddress(local, config1.getPort()))
+                    .build();
+
+            agg1.publish(message);
+        }
+
+        Uninterruptibles.sleepUninterruptibly(8, TimeUnit.SECONDS);
+
+        stopDistributors();
+    }
+
+
+    private void stopDistributors() {
         distributorService1.stopAsync().awaitTerminated();
         distributorService2.stopAsync().awaitTerminated();
         distributorService3.stopAsync().awaitTerminated();
+    }
+
+    private void startDistributors() {
+        distributorService1.startAsync().awaitRunning();
+        distributorService2.startAsync().awaitRunning();
+        distributorService3.startAsync().awaitRunning();
     }
 
 

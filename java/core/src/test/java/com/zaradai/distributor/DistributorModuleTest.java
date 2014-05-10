@@ -89,10 +89,10 @@ public class DistributorModuleTest {
         assertThat(injector.getInstance(MessageEncoderFactory.class), is(injector.getInstance(MessageEncoderFactory.class)));
         assertThat(injector.getInstance(MessageHandlerFactory.class), is(injector.getInstance(MessageHandlerFactory.class)));
         assertThat(injector.getInstance(HandshakeHandlerFactory.class), is(injector.getInstance(HandshakeHandlerFactory.class)));
+        assertThat(injector.getInstance(Serializer.class), is(injector.getInstance(Serializer.class)));
         // Scoped instances
         assertThat(injector.getInstance(EventAggregator.class), not(injector.getInstance(EventAggregator.class)));
         assertThat(injector.getInstance(DistributorConfig.class), not(injector.getInstance(DistributorConfig.class)));
-        assertThat(injector.getInstance(Serializer.class), not(injector.getInstance(Serializer.class)));
         assertThat(injector.getInstance(MessagingService.class), not(injector.getInstance(MessagingService.class)));
         assertThat(injector.getInstance(EventPublisher.class), not(injector.getInstance(EventPublisher.class)));
     }
