@@ -17,6 +17,7 @@ package com.zaradai.distributor.messaging.netty.handler;
 
 import com.google.inject.Inject;
 import com.zaradai.distributor.messaging.Message;
+import com.zaradai.distributor.messaging.netty.InetSocketAddressSerializer;
 import com.zaradai.serialization.Serializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
@@ -42,9 +43,8 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
         int start = out.writerIndex();
         // write the message
         writeHeader(out);
-        writeUuid(msg, out);
         writeSource(msg, out);
-        writePayload(msg, out);
+        writeEvent(msg, out);
         // get slot end index;
         int end = out.writerIndex();
         // write out the bytes length
@@ -59,28 +59,15 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
         }
     }
 
-    private void writeUuid(Message msg, ByteBuf out) throws EncodingException {
-        try {
-            out.writeLong(msg.getId().getMostSignificantBits());
-            out.writeLong(msg.getId().getLeastSignificantBits());
-        } catch (Exception e) {
-            throw new EncodingException("Unable to encode ID", e);
-        }
-    }
-
     private void writeSource(Message msg, ByteBuf out) throws EncodingException {
         try {
-            InetSocketAddress source = msg.getSource();
-            byte[] address = source.getAddress().getAddress();
-            out.writeInt(address.length);
-            out.writeBytes(address);
-            out.writeInt(source.getPort());
+            InetSocketAddressSerializer.serialize(msg.getSource(), out);
         } catch (Exception e) {
             throw new EncodingException("Unable to encode source", e);
         }
     }
 
-    private void writePayload(Message msg, ByteBuf out) throws EncodingException {
+    private void writeEvent(Message msg, ByteBuf out) throws EncodingException {
         try {
             ByteBufOutputStream outputStream = new ByteBufOutputStream(out);
             serializer.serialize(outputStream, msg.getEvent());

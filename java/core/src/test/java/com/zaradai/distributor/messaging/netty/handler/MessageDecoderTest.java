@@ -35,7 +35,6 @@ import static org.mockito.Mockito.mock;
 public class MessageDecoderTest {
     private static final int TEST_VALUE = 675;
     private static final TestEvent TEST_EVENT = new TestEvent(TEST_VALUE);
-    private static final UUID TEST_UUID = UUID.randomUUID();
     private final static InetSocketAddress TEST_ADDRESS = new InetSocketAddress("127.0.0.1", 80);
 
     private Message testMessage;
@@ -43,7 +42,6 @@ public class MessageDecoderTest {
     @Before
     public void setUp() throws Exception {
         testMessage = new Message(TEST_EVENT);
-        testMessage.setId(TEST_UUID);
         testMessage.setSource(TEST_ADDRESS);
     }
 
@@ -58,7 +56,6 @@ public class MessageDecoderTest {
 
         Message res = (Message) uut.decode(ctx, buffer);
 
-        assertThat(res.getId(), is(TEST_UUID));
         assertThat(res.getSource(), is(TEST_ADDRESS));
         assertThat(((TestEvent) res.getEvent()).getTest(), is(TEST_VALUE));
     }

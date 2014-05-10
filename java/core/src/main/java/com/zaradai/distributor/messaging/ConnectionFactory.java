@@ -15,6 +15,8 @@
  */
 package com.zaradai.distributor.messaging;
 
+import java.net.InetSocketAddress;
+
 public interface ConnectionFactory {
-    Connection create();
+    Connection create(InetSocketAddress target);
 }

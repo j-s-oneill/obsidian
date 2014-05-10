@@ -18,28 +18,29 @@ package com.zaradai.distributor.messaging.netty;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.zaradai.distributor.config.DistributorConfig;
-import com.zaradai.distributor.messaging.Client;
 import com.zaradai.distributor.messaging.Connection;
-import com.zaradai.distributor.messaging.netty.handler.InitializerFactory;
+import com.zaradai.distributor.messaging.netty.handler.*;
 import com.zaradai.net.retry.RetryPolicy;
 import com.zaradai.net.retry.RetryPolicyBuilder;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelOption;
+import io.netty.channel.*;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.logging.LoggingHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
-public class NettyClient implements Client {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
+public class NettyClient {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NettyClient.class);
 
     private final DistributorConfig config;
     private final EventLoopGroups eventLoopGroups;
-    private final InitializerFactory initializerFactory;
+    private final MessageEncoderFactory messageEncoderFactory;
+    private final MessageDecoderFactory messageDecoderFactory;
+    private final MessageHandlerFactory messageHandlerFactory;
+    private final HandshakeHandlerFactory handshakeHandlerFactory;
     private final InetSocketAddress endpoint;
     private final Bootstrap bootstrap;
 
@@ -47,17 +48,22 @@ public class NettyClient implements Client {
     NettyClient(
             DistributorConfig config,
             EventLoopGroups eventLoopGroups,
-            InitializerFactory initializerFactory,
+            MessageEncoderFactory messageEncoderFactory,
+            MessageDecoderFactory messageDecoderFactory,
+            MessageHandlerFactory messageHandlerFactory,
+            HandshakeHandlerFactory handshakeHandlerFactory,
             @Assisted InetSocketAddress endpoint) {
         this.config = config;
         this.eventLoopGroups = eventLoopGroups;
-        this.initializerFactory = initializerFactory;
+        this.messageEncoderFactory = messageEncoderFactory;
+        this.messageDecoderFactory = messageDecoderFactory;
+        this.messageHandlerFactory = messageHandlerFactory;
+        this.handshakeHandlerFactory = handshakeHandlerFactory;
         this.endpoint = endpoint;
         bootstrap = createBootstrap();
     }
 
-    @Override
-    public void connect(Connection connection) {
+    public void connect() {
         LOGGER.info("Connecting to {}", endpoint);
         connect(new RetryPolicyBuilder(
                 config.getRetryAttempts(),
@@ -106,9 +112,24 @@ public class NettyClient implements Client {
     private Bootstrap createBootstrap() {
         Bootstrap res = new Bootstrap().group(eventLoopGroups.getClientGroup()).channel(NioSocketChannel.class);
         configure(res);
-        res.handler(initializerFactory.create(true));
+        res.handler(createClientInitializer());
 
         return res;
+    }
+
+    private ChannelInitializer<SocketChannel> createClientInitializer() {
+        return new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                ChannelPipeline pipeline = ch.pipeline();
+
+                pipeline.addLast(new LoggingHandler("CLIENT"));
+                pipeline.addLast("handshake", handshakeHandlerFactory.create(true));
+                pipeline.addLast("decoder", messageDecoderFactory.create());
+                pipeline.addLast("encoder", messageEncoderFactory.create());
+                pipeline.addLast("handler", messageHandlerFactory.create());
+            }
+        };
     }
 
     private void configure(Bootstrap b) {

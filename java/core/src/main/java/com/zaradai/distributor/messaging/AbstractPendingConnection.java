@@ -17,15 +17,18 @@ package com.zaradai.distributor.messaging;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-public abstract class AbstractPendingCacheConnection implements Connection {
-    private final BlockingQueue<Message> pending;
+public abstract class AbstractPendingConnection implements Connection {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Connection.class);
+    private final BlockingQueue<Message> pendingQueue;
 
-    protected AbstractPendingCacheConnection() {
-        pending = createPendingQueue();
+    protected AbstractPendingConnection() {
+        pendingQueue = createPendingQueue();
     }
 
     protected BlockingQueue<Message> createPendingQueue() {
@@ -34,32 +37,37 @@ public abstract class AbstractPendingCacheConnection implements Connection {
 
     @Override
     public void send(Message message) throws MessagingException {
-        if (!isConnected()) {
-            // cache all messages until the connection lives again
+        if (isConnected()) {
+            doSend(message);
+        } else {
+            // store all messages until the connection lives again
             try {
-                pending.put(message);
+                pendingQueue.put(message);
             } catch (InterruptedException e) {
                 throw new MessagingException("Interrupted whilst caching message to send", e);
             }
+            // attempt to connect
+            connect();
+        }
+
+
+        if (!isConnected()) {
+
         } else {
             doSend(message);
         }
     }
 
+    protected abstract void connect();
     protected abstract void doSend(Message message) throws MessagingException;
     protected abstract boolean isConnected();
 
-    /**
-     * Called when an active connection is made.  Any pending messages collected
-     * whilst the connection was down will attempt to send again.
-     * @throws MessagingException
-     */
-    protected void flushPendingMessages() throws MessagingException {
+
+    protected List<Message> drainPending() {
         final List<Message> drained = Lists.newArrayList();
-        pending.drainTo(drained);
-        // try and resend
-        for (Message message : drained) {
-            send(message);
-        }
+        // drain all pending messages
+        pendingQueue.drainTo(drained);
+
+        return drained;
     }
 }

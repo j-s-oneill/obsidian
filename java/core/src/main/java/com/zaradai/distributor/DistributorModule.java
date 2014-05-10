@@ -24,19 +24,12 @@ import com.zaradai.config.ConfigurationSource;
 import com.zaradai.config.InMemoryConfigurationSource;
 import com.zaradai.distributor.config.DistributorConfig;
 import com.zaradai.distributor.config.DistributorConfigImpl;
-import com.zaradai.distributor.messaging.Client;
-import com.zaradai.distributor.messaging.ClientFactory;
 import com.zaradai.distributor.messaging.Connection;
 import com.zaradai.distributor.messaging.ConnectionFactory;
 import com.zaradai.distributor.messaging.ConnectionManager;
 import com.zaradai.distributor.messaging.MessagingService;
-import com.zaradai.distributor.messaging.Server;
-import com.zaradai.distributor.messaging.impl.DefaultMessagingService;
-import com.zaradai.distributor.messaging.netty.EventLoopGroups;
-import com.zaradai.distributor.messaging.netty.NettyClient;
-import com.zaradai.distributor.messaging.netty.NettyConnection;
-import com.zaradai.distributor.messaging.netty.NettyServer;
-import com.zaradai.distributor.messaging.netty.handler.InitializerFactory;
+import com.zaradai.distributor.messaging.netty.*;
+import com.zaradai.distributor.messaging.netty.handler.HandshakeHandlerFactory;
 import com.zaradai.distributor.messaging.netty.handler.MessageDecoderFactory;
 import com.zaradai.distributor.messaging.netty.handler.MessageEncoderFactory;
 import com.zaradai.distributor.messaging.netty.handler.MessageHandlerFactory;
@@ -69,18 +62,15 @@ public class DistributorModule extends AbstractModule {
     }
 
     protected void bindNetty() {
-        // netty
-        bind(Server.class).to(NettyServer.class);
         bind(EventLoopGroups.class).in(Singleton.class);
 
         install(new FactoryModuleBuilder()
-                .implement(Connection.class, NettyConnection.class).build(ConnectionFactory.class));
-        install(new FactoryModuleBuilder()
-                .implement(Client.class, NettyClient.class).build(ClientFactory.class));
-        install(new FactoryModuleBuilder().build(InitializerFactory.class));
+                .implement(Connection.class, ChannelConnection.class).build(ConnectionFactory.class));
+        install(new FactoryModuleBuilder().build(NettyClientFactory.class));
         install(new FactoryModuleBuilder().build(MessageDecoderFactory.class));
         install(new FactoryModuleBuilder().build(MessageEncoderFactory.class));
         install(new FactoryModuleBuilder().build(MessageHandlerFactory.class));
+        install(new FactoryModuleBuilder().build(HandshakeHandlerFactory.class));
     }
 
     protected void bindSerialization() {

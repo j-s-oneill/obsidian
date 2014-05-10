@@ -20,7 +20,7 @@ import com.zaradai.distributor.events.NodeConnectedEvent;
 import com.zaradai.distributor.events.NodeDisconnectedEvent;
 import com.zaradai.distributor.messaging.ConnectionManager;
 import com.zaradai.distributor.messaging.Message;
-import com.zaradai.distributor.messaging.netty.NettyConnection;
+import com.zaradai.distributor.messaging.netty.ChannelConnection;
 import com.zaradai.events.EventAggregator;
 import com.zaradai.mocks.*;
 import io.netty.channel.Channel;
@@ -42,7 +42,7 @@ public class MessageHandlerTest {
     private ConnectionManager connectionManager;
     private ChannelHandlerContext ctx;
     private Channel channel;
-    private NettyConnection connection;
+    private ChannelConnection connection;
     private InetSocketAddress address;
 
     @Before
@@ -51,67 +51,13 @@ public class MessageHandlerTest {
         config = DistributorConfigMocker.create();
         when(config.getPort()).thenReturn(LISTEN_PORT);
         connectionManager = ConnectionManagerMocker.create();
-        connection = NettyConnectionMocker.create();
+        connection = ChannelConnectionMocker.create();
         ctx = mock(ChannelHandlerContext.class);
         channel = mock(Channel.class);
         when(ctx.channel()).thenReturn(channel);
         address = new InetSocketAddress("127.0.0.1", TEST_PORT);
         when(channel.remoteAddress()).thenReturn(address);
-        when(connectionManager.get(address)).thenReturn(connection);
-    }
-
-    @Test
-    public void shouldUpdateConnectionChannelOnActivation() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, true);
-
-        uut.channelActive(ctx);
-
-        verify(connection).setChannel(channel);
-    }
-
-    @Test
-    public void shouldPublishEventOnChannelActivation() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, true);
-
-        uut.channelActive(ctx);
-
-        verify(eventAggregator).publish(any(NodeConnectedEvent.class));
-    }
-
-    @Test
-    public void shouldUpdateConnectionChannelOnDeactivation() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, true);
-
-        uut.channelInactive(ctx);
-
-        verify(connection).setChannel(null);
-    }
-
-    @Test
-    public void shouldPublishEventOnChannelDeactivation() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, true);
-
-        uut.channelInactive(ctx);
-
-        verify(eventAggregator).publish(any(NodeDisconnectedEvent.class));
-    }
-
-    @Test
-    public void shouldPublishMessageIfAClient() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, true);
-
-        uut.messageReceived(ctx, TEST_MESSAGE);
-
-        verify(eventAggregator).publish(TEST_MESSAGE);
-    }
-
-    @Test
-    public void shouldNotPublishMessageIfAServer() throws Exception {
-        MessageHandler uut = new MessageHandler(eventAggregator, config, connectionManager, false);
-
-        uut.messageReceived(ctx, TEST_MESSAGE);
-
-        verify(eventAggregator, never()).publish(TEST_MESSAGE);
+        when(connectionManager.getOrCreate(address)).thenReturn(connection);
     }
 
 }

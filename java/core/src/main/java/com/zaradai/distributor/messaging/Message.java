@@ -26,14 +26,12 @@ import java.util.UUID;
 public class Message {
     public static final int MAGIC_NUMBER = 0xFA4527D8;
 
-    private UUID id;
     private Set<InetSocketAddress> targets;
     private InetSocketAddress source;
     private Object event;
     private boolean incoming;
 
     public Message() {
-        id = UUID.randomUUID();
         targets = createTargetSet();
     }
 
@@ -44,14 +42,6 @@ public class Message {
 
     protected Set<InetSocketAddress> createTargetSet() {
         return Sets.newHashSet();
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
     public InetSocketAddress getSource() {

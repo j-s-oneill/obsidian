@@ -15,8 +15,8 @@
  */
 package com.zaradai.mocks;
 
-import com.zaradai.distributor.messaging.Client;
-import com.zaradai.distributor.messaging.ClientFactory;
+import com.zaradai.distributor.messaging.netty.NettyClient;
+import com.zaradai.distributor.messaging.netty.NettyClientFactory;
 
 import java.net.InetSocketAddress;
 
@@ -24,20 +24,20 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ClientFactoryMocker {
-    public static ClientFactory create() {
-        return mock(ClientFactory.class);
+public class NettyClientFactoryMocker {
+    public static NettyClientFactory create() {
+        return mock(NettyClientFactory.class);
     }
 
-    public static ClientFactory create(Client client) {
-        ClientFactory res = create();
+    public static NettyClientFactory create(NettyClient client) {
+        NettyClientFactory res = create();
         when(res.create(any(InetSocketAddress.class))).thenReturn(client);
 
         return res;
     }
 
-    public static ClientFactory create(Client client, InetSocketAddress address) {
-        ClientFactory res = create();
+    public static NettyClientFactory create(NettyClient client, InetSocketAddress address) {
+        NettyClientFactory res = create();
         when(res.create(address)).thenReturn(client);
 
         return res;

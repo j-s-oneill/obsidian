@@ -15,6 +15,25 @@
  */
 package com.zaradai.distributor.messaging.netty.handler;
 
-public interface InitializerFactory {
-    Initializer create(Boolean createClientInitializer);
+import com.google.common.base.Preconditions;
+
+public class HandshakeCompletionEvent {
+    public static final HandshakeCompletionEvent SUCCESS = new HandshakeCompletionEvent();
+    private final Throwable cause;
+
+    private HandshakeCompletionEvent() {
+        cause = null;
+    }
+
+    public HandshakeCompletionEvent(Throwable cause) {
+        this.cause = Preconditions.checkNotNull(cause, "Invalid cause");
+    }
+
+    public boolean isSuccess() {
+        return cause == null;
+    }
+
+    public Throwable getCause() {
+        return cause;
+    }
 }

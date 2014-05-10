@@ -15,22 +15,12 @@
  */
 package com.zaradai.mocks;
 
-import com.zaradai.distributor.messaging.netty.handler.Initializer;
-import com.zaradai.distributor.messaging.netty.handler.InitializerFactory;
+import com.zaradai.distributor.messaging.netty.NettyClient;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-public class InitializerFactoryMocker {
-    public static InitializerFactory create() {
-        return mock(InitializerFactory.class);
+public class NettyClientMocker {
+    public static NettyClient create() {
+        return mock(NettyClient.class);
     }
-
-    public static InitializerFactory create(boolean condition, Initializer initializer) {
-        InitializerFactory res = create();
-        when(res.create(condition)).thenReturn(initializer);
-
-        return res;
-    }
-
 }

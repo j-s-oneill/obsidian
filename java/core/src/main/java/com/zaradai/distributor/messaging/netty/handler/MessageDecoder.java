@@ -17,6 +17,7 @@ package com.zaradai.distributor.messaging.netty.handler;
 
 import com.google.inject.Inject;
 import com.zaradai.distributor.messaging.Message;
+import com.zaradai.distributor.messaging.netty.InetSocketAddressSerializer;
 import com.zaradai.serialization.Serializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -49,7 +50,6 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
         Message res = new Message();
 
         readHeader(frame);
-        readUuid(res, frame);
         readSource(res, frame);
         readEvent(res, frame);
         res.setIncoming(true);
@@ -71,23 +71,9 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
         }
     }
 
-    private void readUuid(Message res, ByteBuf frame) throws EncodingException {
-        try {
-            UUID uuid = new UUID(frame.readLong(), frame.readLong());
-            res.setId(uuid);
-        } catch (Exception e) {
-            throw new EncodingException("Unable to read ID", e);
-        }
-    }
-
     private void readSource(Message res, ByteBuf frame) throws EncodingException {
         try {
-            int len = frame.readInt();
-            byte[] bytes = new byte[len];
-            frame.readBytes(bytes);
-            int port = frame.readInt();
-
-            res.setSource(new InetSocketAddress(InetAddress.getByAddress(bytes), port));
+            res.setSource(InetSocketAddressSerializer.deserialize(frame));
         } catch (Exception e) {
             throw new EncodingException("Unable to read source", e);
         }

@@ -15,12 +15,12 @@
  */
 package com.zaradai.mocks;
 
-import com.zaradai.distributor.messaging.Server;
+import com.zaradai.distributor.messaging.netty.NettyServer;
 
 import static org.mockito.Mockito.mock;
 
 public class ServerMocker {
-    public static Server create() {
-        return mock(Server.class);
+    public static NettyServer create() {
+        return mock(NettyServer.class);
     }
 }

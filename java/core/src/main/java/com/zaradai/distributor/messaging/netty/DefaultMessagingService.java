@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zaradai.distributor.messaging.impl;
+package com.zaradai.distributor.messaging.netty;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.inject.Inject;
@@ -23,7 +23,6 @@ import com.zaradai.distributor.messaging.ConnectionManager;
 import com.zaradai.distributor.messaging.Message;
 import com.zaradai.distributor.messaging.MessagingException;
 import com.zaradai.distributor.messaging.MessagingService;
-import com.zaradai.distributor.messaging.Server;
 import com.zaradai.distributor.messaging.netty.EventLoopGroups;
 import com.zaradai.events.EventAggregator;
 
@@ -32,11 +31,11 @@ import java.net.InetSocketAddress;
 public class DefaultMessagingService extends AbstractIdleService implements MessagingService {
     private final EventAggregator eventAggregator;
     private final ConnectionManager connectionManager;
-    private final Server server;
+    private final NettyServer server;
     private final EventLoopGroups eventLoopGroups;
 
     @Inject
-    DefaultMessagingService(EventAggregator eventAggregator, ConnectionManager connectionManager, Server server,
+    DefaultMessagingService(EventAggregator eventAggregator, ConnectionManager connectionManager, NettyServer server,
                             EventLoopGroups eventLoopGroups) {
         this.eventAggregator = eventAggregator;
         this.connectionManager = connectionManager;
@@ -61,20 +60,36 @@ public class DefaultMessagingService extends AbstractIdleService implements Mess
 
     @Override
     public void publish(Message message) {
-        for (InetSocketAddress address : connectionManager.getKnownAddresses()) {
-            send(address, message);
+        for (Connection connection : connectionManager.getAll()) {
+            sendMessage(connection, message);
         }
+
     }
 
-    @Override
-    public void send(InetSocketAddress target, Message message) {
-        Connection connection = connectionManager.get(target, true);
-
+    private void sendMessage(Connection connection, Message message)  {
         try {
             connection.send(message);
         } catch (MessagingException e) {
             // notify of send error
             eventAggregator.publish(new MessageErrorEvent(message, e.getMessage()));
         }
+    }
+
+    @Override
+    public void send(InetSocketAddress target, Message message) {
+        Connection connection = connectionManager.getForEndpoint(target);
+
+        if (connection != null) {
+            sendMessage(connection, message);
+        } else {
+            createConnectionAndSend(target, message);
+        }
+    }
+
+    private void createConnectionAndSend(InetSocketAddress target, Message message) {
+        // create a connection
+        Connection connection = connectionManager.getOrCreate(target);
+        // and send on it
+        sendMessage(connection, message);
     }
 }
