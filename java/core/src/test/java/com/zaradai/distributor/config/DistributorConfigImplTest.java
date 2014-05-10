@@ -102,4 +102,18 @@ public class DistributorConfigImplTest {
 
         verify(source).get(DistributorConfigImpl.REUSE_ADDRESS, DistributorConfigImpl.DEFAULT_REUSE_ADDRESS);
     }
+
+    @Test
+    public void shouldGetConnectionTimeout() throws Exception {
+        uut.getConnectionTimeout();
+
+        verify(source).get(DistributorConfigImpl.CONNECTION_TIMEOUT, DistributorConfigImpl.DEFAULT_CONNECTION_TIMEOUT);
+    }
+
+    @Test
+    public void shouldGetHandshakeTimeout() throws Exception {
+        uut.getHandshakeTimeout();
+
+        verify(source).get(DistributorConfigImpl.HANDSHAKE_TIMEOUT, DistributorConfigImpl.DEFAULT_HANDSHAKE_TIMEOUT);
+    }
 }

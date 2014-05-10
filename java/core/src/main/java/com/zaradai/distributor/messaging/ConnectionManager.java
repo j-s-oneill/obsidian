@@ -15,15 +15,15 @@
  */
 package com.zaradai.distributor.messaging;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 public class ConnectionManager {
@@ -48,16 +48,16 @@ public class ConnectionManager {
         activeConnections.remove(endpoint);
     }
 
-    public List<InetSocketAddress> getKnownAddresses() {
-        return ImmutableList.copyOf(activeConnections.keySet());
+    public Set<InetSocketAddress> getKnownAddresses() {
+        return ImmutableSet.copyOf(activeConnections.keySet());
     }
 
     public Connection getForEndpoint(InetSocketAddress endpoint) {
         return activeConnections.get(endpoint);
     }
 
-    public List<Connection> getForAddress(InetAddress address) {
-        List<Connection> res = Lists.newArrayList();
+    public Set<Connection> getForAddress(InetAddress address) {
+        Set<Connection> res = Sets.newHashSet();
 
         for (Map.Entry<InetSocketAddress, Connection> entry : activeConnections.entrySet()) {
             if (entry.getKey().getAddress().equals(address)) {
@@ -68,8 +68,8 @@ public class ConnectionManager {
         return res;
     }
 
-    public List<Connection> getAll() {
-        return ImmutableList.copyOf(activeConnections.values());
+    public Set<Connection> getAll() {
+        return ImmutableSet.copyOf(activeConnections.values());
     }
 
     public Connection getOrCreate(InetSocketAddress endpoint) {
