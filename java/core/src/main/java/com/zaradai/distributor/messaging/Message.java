@@ -34,11 +34,6 @@ public class Message {
         targets = createTargetSet();
     }
 
-    public Message(Object event) {
-        this();
-        setEvent(event);
-    }
-
     protected Set<InetSocketAddress> createTargetSet() {
         return Sets.newHashSet();
     }
@@ -78,5 +73,31 @@ public class Message {
 
     public void clearTargets() {
         targets.clear();
+    }
+
+    public static class Builder {
+        private final Message message;
+        public Builder() {
+            message = new Message();
+        }
+
+        public Builder event(Object event) {
+            message.setEvent(event);
+            return this;
+        }
+
+        public Builder addTarget(InetSocketAddress address) {
+            message.addTarget(address);
+            return this;
+        }
+
+        public Message build() {
+            return message;
+        }
+
+        public Builder from(InetSocketAddress address) {
+            message.setSource(address);
+            return this;
+        }
     }
 }

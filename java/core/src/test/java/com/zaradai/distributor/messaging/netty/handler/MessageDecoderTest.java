@@ -26,7 +26,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
-import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -41,7 +40,8 @@ public class MessageDecoderTest {
 
     @Before
     public void setUp() throws Exception {
-        testMessage = new Message(TEST_EVENT);
+        testMessage = new Message();
+        testMessage.setEvent(TEST_EVENT);
         testMessage.setSource(TEST_ADDRESS);
     }
 

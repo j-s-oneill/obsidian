@@ -61,10 +61,12 @@ public class DistributorServiceTest {
 
         InetAddress local = InetAddress.getByName(config1.getHost());
 
-        Message message = new Message(new TestEvent());
-        message.setSource(new InetSocketAddress(local, config1.getPort()));
-        message.addTarget(new InetSocketAddress(local, config2.getPort()));
-        message.addTarget(new InetSocketAddress(local, config3.getPort()));
+        Message message = new Message.Builder()
+                .event(new TestEvent())
+                .addTarget(new InetSocketAddress(local, config2.getPort()))
+                .addTarget(new InetSocketAddress(local, config3.getPort()))
+                .from(new InetSocketAddress(local, config1.getPort()))
+                .build();
 
         EventAggregator agg1 = injector1.getInstance(EventAggregator.class);
         agg1.publish(message);
