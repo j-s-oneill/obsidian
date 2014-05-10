@@ -16,21 +16,21 @@
 package com.zaradai.distributor.messaging.netty.handler;
 
 import com.google.inject.Inject;
+import com.zaradai.distributor.events.EventPublisher;
 import com.zaradai.distributor.messaging.Message;
-import com.zaradai.events.EventAggregator;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 public class MessageHandler extends SimpleChannelInboundHandler<Message> {
-    private final EventAggregator eventAggregator;
+    private final EventPublisher eventPublisher;
 
     @Inject
-    MessageHandler(EventAggregator eventAggregator) {
-        this.eventAggregator = eventAggregator;
+    MessageHandler(EventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, Message message) throws Exception {
-        eventAggregator.publish(message);
+        eventPublisher.publish(message);
     }
 }
