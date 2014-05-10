@@ -17,12 +17,12 @@ package com.zaradai.distributor.messaging.netty;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.zaradai.distributor.events.EventPublisher;
 import com.zaradai.distributor.events.MessageErrorEvent;
 import com.zaradai.distributor.events.MessageSentEvent;
 import com.zaradai.distributor.messaging.AbstractPendingConnection;
 import com.zaradai.distributor.messaging.Message;
 import com.zaradai.distributor.messaging.MessagingException;
-import com.zaradai.events.EventAggregator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -36,8 +36,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ChannelConnection extends AbstractPendingConnection {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChannelConnection.class);
 
-    private final EventAggregator eventAggregator;
     private final NettyClientFactory nettyClientFactory;
+    private final EventPublisher eventPublisher;
     private volatile Channel channel;
     private final InetSocketAddress endpoint;
     private AtomicBoolean doReconnect;
@@ -49,9 +49,9 @@ public class ChannelConnection extends AbstractPendingConnection {
     };
 
     @Inject
-    ChannelConnection(EventAggregator eventAggregator, NettyClientFactory nettyClientFactory,
+    ChannelConnection(EventPublisher eventPublisher, NettyClientFactory nettyClientFactory,
                       @Assisted InetSocketAddress endpoint) {
-        this.eventAggregator = eventAggregator;
+        this.eventPublisher = eventPublisher;
         this.nettyClientFactory = nettyClientFactory;
         this.endpoint = endpoint;
         doReconnect = new AtomicBoolean(true);
@@ -132,11 +132,11 @@ public class ChannelConnection extends AbstractPendingConnection {
     }
 
     protected void onSuccess(Message message) {
-        eventAggregator.publish(new MessageSentEvent(message));
+        eventPublisher.publish(new MessageSentEvent(message));
     }
 
     protected void onFailure(Message message, Throwable cause) {
-        eventAggregator.publish(new MessageErrorEvent(message, cause.getMessage()));
+        eventPublisher.publish(new MessageErrorEvent(message, cause.getMessage()));
     }
 
     private void flushPending() {
@@ -147,7 +147,7 @@ public class ChannelConnection extends AbstractPendingConnection {
                 send(message);
             } catch (MessagingException e) {
                 // notify of send error
-                eventAggregator.publish(new MessageErrorEvent(message, e.getMessage()));
+                eventPublisher.publish(new MessageErrorEvent(message, e.getMessage()));
             }
         }
     }

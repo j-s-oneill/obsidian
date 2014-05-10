@@ -17,26 +17,22 @@ package com.zaradai.distributor.messaging.netty;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.inject.Inject;
+import com.zaradai.distributor.events.EventPublisher;
 import com.zaradai.distributor.events.MessageErrorEvent;
-import com.zaradai.distributor.messaging.Connection;
-import com.zaradai.distributor.messaging.ConnectionManager;
-import com.zaradai.distributor.messaging.Message;
-import com.zaradai.distributor.messaging.MessagingException;
-import com.zaradai.distributor.messaging.MessagingService;
-import com.zaradai.events.EventAggregator;
+import com.zaradai.distributor.messaging.*;
 
 import java.net.InetSocketAddress;
 
 public class DefaultMessagingService extends AbstractIdleService implements MessagingService {
-    private final EventAggregator eventAggregator;
+    private final EventPublisher eventPublisher;
     private final ConnectionManager connectionManager;
     private final NettyServer server;
     private final EventLoopGroups eventLoopGroups;
 
     @Inject
-    DefaultMessagingService(EventAggregator eventAggregator, ConnectionManager connectionManager, NettyServer server,
+    DefaultMessagingService(EventPublisher eventPublisher, ConnectionManager connectionManager, NettyServer server,
                             EventLoopGroups eventLoopGroups) {
-        this.eventAggregator = eventAggregator;
+        this.eventPublisher = eventPublisher;
         this.connectionManager = connectionManager;
         this.server = server;
         this.eventLoopGroups = eventLoopGroups;
@@ -70,7 +66,7 @@ public class DefaultMessagingService extends AbstractIdleService implements Mess
             connection.send(message);
         } catch (MessagingException e) {
             // notify of send error
-            eventAggregator.publish(new MessageErrorEvent(message, e.getMessage()));
+            eventPublisher.publish(new MessageErrorEvent(message, e.getMessage()));
         }
     }
 

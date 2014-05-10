@@ -21,6 +21,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.zaradai.config.ConfigurationSource;
 import com.zaradai.distributor.config.DistributorConfig;
+import com.zaradai.distributor.events.EventPublisher;
 import com.zaradai.distributor.messaging.ConnectionFactory;
 import com.zaradai.distributor.messaging.ConnectionManager;
 import com.zaradai.distributor.messaging.MessagingService;
@@ -65,6 +66,7 @@ public class DistributorModuleTest {
         assertThat(injector.getInstance(ConnectionManager.class), not(nullValue()));
         assertThat(injector.getInstance(ConnectionAuthenticator.class), not(nullValue()));
         assertThat(injector.getInstance(EventLoopGroups.class), not(nullValue()));
+        assertThat(injector.getInstance(EventPublisher.class), not(nullValue()));
         assertThat(injector.getInstance(ConnectionFactory.class), not(nullValue()));
         assertThat(injector.getInstance(NettyClientFactory.class), not(nullValue()));
         assertThat(injector.getInstance(MessageDecoderFactory.class), not(nullValue()));
@@ -92,6 +94,7 @@ public class DistributorModuleTest {
         assertThat(injector.getInstance(DistributorConfig.class), not(injector.getInstance(DistributorConfig.class)));
         assertThat(injector.getInstance(Serializer.class), not(injector.getInstance(Serializer.class)));
         assertThat(injector.getInstance(MessagingService.class), not(injector.getInstance(MessagingService.class)));
+        assertThat(injector.getInstance(EventPublisher.class), not(injector.getInstance(EventPublisher.class)));
     }
 
     @Test
