@@ -15,49 +15,24 @@
  */
 package com.zaradai.distributor.messaging.netty.handler;
 
-import com.zaradai.distributor.config.DistributorConfig;
-import com.zaradai.distributor.events.NodeConnectedEvent;
-import com.zaradai.distributor.events.NodeDisconnectedEvent;
-import com.zaradai.distributor.messaging.ConnectionManager;
+import com.zaradai.distributor.events.EventPublisher;
 import com.zaradai.distributor.messaging.Message;
-import com.zaradai.distributor.messaging.netty.ChannelConnection;
-import com.zaradai.events.EventAggregator;
-import com.zaradai.mocks.*;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import org.junit.Before;
+import com.zaradai.mocks.EventPublisherMocker;
+import com.zaradai.mocks.MessageMocker;
 import org.junit.Test;
 
-import java.net.InetSocketAddress;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
 public class MessageHandlerTest {
-    private static final int TEST_PORT = 345;
-    private static final int LISTEN_PORT = 346;
     private static final Message TEST_MESSAGE = MessageMocker.create();
-    private EventAggregator eventAggregator;
-    private DistributorConfig config;
-    private ConnectionManager connectionManager;
-    private ChannelHandlerContext ctx;
-    private Channel channel;
-    private ChannelConnection connection;
-    private InetSocketAddress address;
 
-    @Before
-    public void setUp() throws Exception {
-        eventAggregator = EventAggregatorMocker.create();
-        config = DistributorConfigMocker.create();
-        when(config.getPort()).thenReturn(LISTEN_PORT);
-        connectionManager = ConnectionManagerMocker.create();
-        connection = ChannelConnectionMocker.create();
-        ctx = mock(ChannelHandlerContext.class);
-        channel = mock(Channel.class);
-        when(ctx.channel()).thenReturn(channel);
-        address = new InetSocketAddress("127.0.0.1", TEST_PORT);
-        when(channel.remoteAddress()).thenReturn(address);
-        when(connectionManager.getOrCreate(address)).thenReturn(connection);
+    @Test
+    public void shouldPublishOnMessageReceived() throws Exception {
+        EventPublisher eventPublisher = EventPublisherMocker.create();
+        MessageHandler uut = new MessageHandler(eventPublisher);
+
+        uut.messageReceived(null, TEST_MESSAGE);
+
+        verify(eventPublisher).publish(TEST_MESSAGE);
     }
-
 }
