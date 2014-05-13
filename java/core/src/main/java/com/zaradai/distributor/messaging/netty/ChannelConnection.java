@@ -41,7 +41,7 @@ public class ChannelConnection extends AbstractPendingConnection {
     private volatile Channel channel;
     private final InetSocketAddress endpoint;
     private AtomicBoolean doReconnect;
-    private final ChannelFutureListener lostNotifier = new ChannelFutureListener() {
+    final ChannelFutureListener lostNotifier = new ChannelFutureListener() {
         @Override
         public void operationComplete(ChannelFuture channelFuture) throws Exception {
             setChannel(null);
