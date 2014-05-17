@@ -1,4 +1,4 @@
-obsidian
+Obsidian (WIP)
 ========
 
-Distributed event aggregator
+Obsidian is a distributed event aggregator
