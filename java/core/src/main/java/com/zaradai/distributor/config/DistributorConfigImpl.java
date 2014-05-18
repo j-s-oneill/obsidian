@@ -33,6 +33,7 @@ public class DistributorConfigImpl implements DistributorConfig {
     public static final String REUSE_ADDRESS = PRE + ".reuse.address";
     public static final String CONNECTION_TIMEOUT = PRE + ".connection.timeout";
     public static final String HANDSHAKE_TIMEOUT = PRE + ".handshake.timeout";
+    public static final String VERBOSE_LOGGING = PRE + ".verbose.logging";
 
     public static final int DEFAULT_PORT = 1907;
     public static final String DEFAULT_HOST = "localhost";
@@ -46,6 +47,7 @@ public class DistributorConfigImpl implements DistributorConfig {
     public static final boolean DEFAULT_REUSE_ADDRESS = true;
     public static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
     public static final int DEFAULT_HANDSHAKE_TIMEOUT = 5000;
+    public static final boolean DEFAULT_VERBOSE_LOGGING = false;
 
     private final ConfigurationSource source;
 
@@ -112,5 +114,10 @@ public class DistributorConfigImpl implements DistributorConfig {
     @Override
     public long getHandshakeTimeout() {
         return source.get(HANDSHAKE_TIMEOUT, DEFAULT_HANDSHAKE_TIMEOUT);
+    }
+
+    @Override
+    public boolean getVerboseLogging() {
+        return source.get(VERBOSE_LOGGING, DEFAULT_VERBOSE_LOGGING);
     }
 }

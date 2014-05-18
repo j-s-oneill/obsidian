@@ -43,7 +43,7 @@ public class PingPongTester {
     PingPongTester(EventAggregator eventAggregator, DistributorConfig config) {
         this.eventAggregator = eventAggregator;
         source = createSource(config);
-        LOGGER.info("Subscribing for TESTER, {}", config.getPort());
+
         eventAggregator.subscribe(this);
     }
 

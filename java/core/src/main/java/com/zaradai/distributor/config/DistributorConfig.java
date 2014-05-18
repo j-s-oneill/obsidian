@@ -64,4 +64,10 @@ public interface DistributorConfig {
     int getConnectionTimeout();
 
     long getHandshakeTimeout();
+
+    /**
+     * Determines whether the low level communication layer is logged.
+     * @return true is logged
+     */
+    boolean getVerboseLogging();
 }

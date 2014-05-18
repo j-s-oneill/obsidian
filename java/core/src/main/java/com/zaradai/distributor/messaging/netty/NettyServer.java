@@ -92,21 +92,10 @@ public class NettyServer {
                 .group(eventLoopGroups.getServerGroup(), eventLoopGroups.getClientGroup())
                 .channel(NioServerSocketChannel.class);
         configure(res);
-        //res.handler(createAcceptorInitializer());
         res.childHandler(createClientInitializer());
 
         return res;
     }
-
-//    private ChannelInitializer<ServerSocketChannel> createAcceptorInitializer() {
-//        return new ChannelInitializer<ServerSocketChannel>() {
-//            @Override
-//            protected void initChannel(ServerSocketChannel channel) throws Exception {
-//                channel.pipeline().addLast(connectionAuthenticatorHandler);
-//                channel.pipeline().addLast(new LoggingHandler("ACCEPTOR"));  // remove once dev complete
-//            }
-//        };
-//    }
 
     private ChannelInitializer<SocketChannel> createClientInitializer() {
         return new ChannelInitializer<SocketChannel>() {
@@ -114,7 +103,9 @@ public class NettyServer {
             protected void initChannel(SocketChannel ch) throws Exception {
                 ChannelPipeline pipeline = ch.pipeline();
 
-                pipeline.addLast(new LoggingHandler("SERVER-CLIENT"));
+                if (config.getVerboseLogging()) {
+                    pipeline.addLast(new LoggingHandler("SERVER-CLIENT"));
+                }
                 pipeline.addLast("handshake", handshakeHandlerFactory.create(false));
                 pipeline.addLast("decoder", messageDecoderFactory.create());
                 pipeline.addLast("encoder", messageEncoderFactory.create());

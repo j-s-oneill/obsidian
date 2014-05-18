@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 public class DistributorServiceTest {
     @Test
     public void shouldPingPong() throws Exception {
+        boolean verboseLogging = false;
         // Create the set of address we shall use in the test
         InetAddress local = createLocalAddress();
         InetSocketAddress source1 = new InetSocketAddress(local, 1710);
@@ -43,15 +44,19 @@ public class DistributorServiceTest {
         // setup
         dis1.setPort(source1.getPort());
         dis1.setHost(source1.getHostName());
+        dis1.setVerboseLogging(verboseLogging);
         dis2.setPort(source2.getPort());
         dis2.setHost(source2.getHostName());
+        dis2.setVerboseLogging(verboseLogging);
         dis3.setPort(source3.getPort());
         dis3.setHost(source3.getHostName());
+        dis3.setVerboseLogging(verboseLogging);
         dis4.setPort(source4.getPort());
         dis4.setHost(source4.getHostName());
+        dis4.setVerboseLogging(verboseLogging);
         // get the testers
         // NOTE: although we don't need to get testers 2,3,4 to call on but by doing so we ensure their ctors are
-        // called and so message are subscribed to, in a production system this would be taken care off through
+        // called and so messages are subscribed to, in a production system this would be taken care of through
         // natural creation of the application state.
         PingPongTester tester1 = dis1.getTester();
         PingPongTester tester2 = dis2.getTester();

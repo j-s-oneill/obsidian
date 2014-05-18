@@ -129,7 +129,9 @@ public class NettyClient {
             protected void initChannel(SocketChannel ch) throws Exception {
                 ChannelPipeline pipeline = ch.pipeline();
 
-                pipeline.addLast(new LoggingHandler("CLIENT"));
+                if (config.getVerboseLogging()) {
+                    pipeline.addLast(new LoggingHandler("CLIENT"));
+                }
                 pipeline.addLast("handshake", handshakeHandlerFactory.create(true));
                 pipeline.addLast("decoder", messageDecoderFactory.create());
                 pipeline.addLast("encoder", messageEncoderFactory.create());

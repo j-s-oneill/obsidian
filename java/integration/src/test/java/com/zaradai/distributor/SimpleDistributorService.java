@@ -57,6 +57,14 @@ public class SimpleDistributorService {
         return config.getHost();
     }
 
+    public void setVerboseLogging(boolean verboseLogging) {
+        source.set(DistributorConfigImpl.VERBOSE_LOGGING, verboseLogging);
+    }
+
+    public boolean isVerboseLogging() {
+        return config.getVerboseLogging();
+    }
+
     public PingPongTester getTester() {
         return injector.getInstance(PingPongTester.class);
     }
