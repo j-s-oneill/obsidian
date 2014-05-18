@@ -18,6 +18,7 @@ package com.zaradai.distributor;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.inject.Inject;
+import com.zaradai.distributor.config.DistributorConfig;
 import com.zaradai.distributor.messaging.Message;
 import com.zaradai.distributor.messaging.MessagingService;
 import com.zaradai.events.EventAggregator;
@@ -28,13 +29,27 @@ import java.util.Set;
 public class DistributorService extends AbstractIdleService {
     private final EventAggregator eventAggregator;
     private final MessagingService messagingService;
+    private final InetSocketAddress source;
 
     @Inject
-    DistributorService(EventAggregator eventAggregator, MessagingService messagingService) {
+    DistributorService(EventAggregator eventAggregator, MessagingService messagingService, DistributorConfig config) {
         this.eventAggregator = eventAggregator;
         this.messagingService = messagingService;
 
         this.eventAggregator.subscribe(this);
+        source = createSource(config.getHost(), config.getPort());
+    }
+
+    private InetSocketAddress createSource(String host, int port) {
+        InetSocketAddress res;
+
+        try {
+            res = new InetSocketAddress(host, port);
+        } catch (Exception e) {
+            res = new InetSocketAddress(port);
+        }
+
+        return res;
     }
 
     /**
@@ -71,6 +86,10 @@ public class DistributorService extends AbstractIdleService {
         // clear the targets from the message to reduce size on the wire
         // as this information is not required anymore
         message.clearTargets();
+        // set the source, if not already set
+        if (message.getSource() == null) {
+            message.setSource(source);
+        }
         // if no targets then publish to all connected clients
         if (targets.isEmpty()) {
             messagingService.publish(message);

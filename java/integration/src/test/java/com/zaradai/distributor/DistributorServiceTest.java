@@ -15,118 +15,75 @@
  */
 package com.zaradai.distributor;
 
-import com.google.common.util.concurrent.Uninterruptibles;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.zaradai.config.ConfigurationSource;
-import com.zaradai.distributor.config.DistributorConfig;
-import com.zaradai.distributor.config.DistributorConfigImpl;
-import com.zaradai.distributor.messaging.Message;
-import com.zaradai.events.EventAggregator;
-import org.junit.Before;
+import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.concurrent.TimeUnit;
+import java.net.UnknownHostException;
+import java.util.concurrent.*;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 public class DistributorServiceTest {
-    private Injector injector1;
-    private DistributorConfig config1;
-    private Injector injector2;
-    private DistributorConfig config2;
-    private Injector injector3;
-    private DistributorConfig config3;
-    private DistributorService distributorService1;
-    private DistributorService distributorService2;
-    private DistributorService distributorService3;
+    @Test
+    public void shouldPingPong() throws Exception {
+        // Create the set of address we shall use in the test
+        InetAddress local = createLocalAddress();
+        InetSocketAddress source1 = new InetSocketAddress(local, 1710);
+        InetSocketAddress source2 = new InetSocketAddress(local, 1711);
+        InetSocketAddress source3 = new InetSocketAddress(local, 1712);
+        InetSocketAddress source4 = new InetSocketAddress(local, 1713);
 
-    @Before
-    public void setUp() throws Exception {
-        injector1 = createInjector();
-        ConfigurationSource source = injector1.getInstance(ConfigurationSource.class);
-        config1 = injector1.getInstance(DistributorConfig.class);
-        source.set(DistributorConfigImpl.PORT, 1708);
+        SimpleDistributorService dis1 = new SimpleDistributorService();
+        SimpleDistributorService dis2 = new SimpleDistributorService();
+        SimpleDistributorService dis3 = new SimpleDistributorService();
+        SimpleDistributorService dis4 = new SimpleDistributorService();
+        // setup
+        dis1.setPort(source1.getPort());
+        dis1.setHost(source1.getHostName());
+        dis2.setPort(source2.getPort());
+        dis2.setHost(source2.getHostName());
+        dis3.setPort(source3.getPort());
+        dis3.setHost(source3.getHostName());
+        dis4.setPort(source4.getPort());
+        dis4.setHost(source4.getHostName());
+        // get the testers
+        // NOTE: although we don't need to get testers 2,3,4 to call on but by doing so we ensure their ctors are
+        // called and so message are subscribed to, in a production system this would be taken care off through
+        // natural creation of the application state.
+        PingPongTester tester1 = dis1.getTester();
+        PingPongTester tester2 = dis2.getTester();
+        PingPongTester tester3 = dis3.getTester();
+        PingPongTester tester4 = dis4.getTester();
+        // start up
+        dis1.start();
+        dis2.start();
+        dis3.start();
+        dis4.start();
+        // start ping pong from 1
+        tester1.test(Lists.newArrayList(source2, source3, source4));
+        // wait for it to finish
+        boolean res = tester1.waitUntilFinishes(10, TimeUnit.SECONDS);
+        // shutdown
+        dis1.stop();
+        dis2.stop();
+        dis3.stop();
+        dis4.stop();
 
-        injector2 = createInjector();
-        ConfigurationSource source2 = injector2.getInstance(ConfigurationSource.class);
-        config2 = injector2.getInstance(DistributorConfig.class);
-        source2.set(DistributorConfigImpl.PORT, 1709);
-
-        injector3 = createInjector();
-        ConfigurationSource source3 = injector3.getInstance(ConfigurationSource.class);
-        config3 = injector3.getInstance(DistributorConfig.class);
-        source3.set(DistributorConfigImpl.PORT, 1710);
-
-        distributorService1 = injector1.getInstance(DistributorService.class);
-        distributorService2 = injector2.getInstance(DistributorService.class);
-        distributorService3 = injector3.getInstance(DistributorService.class);
+        assertThat(res, is(true));
     }
 
-    @Test
-    public void shouldRun() throws Exception {
-        startDistributors();
-        // sleep a bit
-        Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
+    private InetAddress createLocalAddress() {
+        InetAddress res;
 
-        InetAddress local = InetAddress.getByName(config1.getHost());
-
-        Message message = new Message.Builder()
-                .event(new TestEvent())
-                .addTarget(new InetSocketAddress(local, config2.getPort()))
-                .addTarget(new InetSocketAddress(local, config3.getPort()))
-                .from(new InetSocketAddress(local, config1.getPort()))
-                .build();
-
-        EventAggregator agg1 = injector1.getInstance(EventAggregator.class);
-        agg1.publish(message);
-
-        Uninterruptibles.sleepUninterruptibly(8, TimeUnit.SECONDS);
-
-        stopDistributors();
-    }
-
-    @Test
-    public void shouldRunMultiple() throws Exception {
-        startDistributors();
-        // sleep a bit
-        Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
-
-        InetAddress local = InetAddress.getByName(config1.getHost());
-
-        EventAggregator agg1 = injector1.getInstance(EventAggregator.class);
-
-        for (int i = 0; i < 20; ++i) {
-            Message message = new Message.Builder()
-                    .event(new TestEvent())
-                    .addTarget(new InetSocketAddress(local, config2.getPort()))
-                    .addTarget(new InetSocketAddress(local, config3.getPort()))
-                    .from(new InetSocketAddress(local, config1.getPort()))
-                    .build();
-
-            agg1.publish(message);
+        try {
+            res = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            res = InetAddress.getLoopbackAddress();
         }
 
-        Uninterruptibles.sleepUninterruptibly(8, TimeUnit.SECONDS);
-
-        stopDistributors();
-    }
-
-
-    private void stopDistributors() {
-        distributorService1.stopAsync().awaitTerminated();
-        distributorService2.stopAsync().awaitTerminated();
-        distributorService3.stopAsync().awaitTerminated();
-    }
-
-    private void startDistributors() {
-        distributorService1.startAsync().awaitRunning();
-        distributorService2.startAsync().awaitRunning();
-        distributorService3.startAsync().awaitRunning();
-    }
-
-
-    private Injector createInjector() {
-        return Guice.createInjector(new DistributorModule());
+        return res;
     }
 }

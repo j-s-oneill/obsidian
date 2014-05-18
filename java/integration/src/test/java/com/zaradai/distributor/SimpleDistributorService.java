@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.zaradai.distributor.count;
+package com.zaradai.distributor;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.zaradai.config.ConfigurationSource;
-import com.zaradai.distributor.DistributorModule;
-import com.zaradai.distributor.DistributorService;
 import com.zaradai.distributor.config.DistributorConfig;
 import com.zaradai.distributor.config.DistributorConfigImpl;
-import com.zaradai.distributor.messaging.Message;
 import com.zaradai.events.EventAggregator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 
 public class SimpleDistributorService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleDistributorService.class);
@@ -64,31 +57,19 @@ public class SimpleDistributorService {
         return config.getHost();
     }
 
+    public PingPongTester getTester() {
+        return injector.getInstance(PingPongTester.class);
+    }
+
     public void start() throws Exception {
         distributorService.startAsync().awaitRunning();
     }
 
     public void stop() throws Exception {
         distributorService.stopAsync().awaitTerminated();
-
     }
 
     private Injector createInjector() {
-        return Guice.createInjector(new DistributorModule());
-    }
-
-    public void post(Object event, InetSocketAddress... addresses) {
-        try {
-            Message message = new Message();
-            message.setEvent(event);
-            message.setSource(new InetSocketAddress(InetAddress.getLocalHost(), getPort()));
-
-            for (InetSocketAddress address : addresses) {
-                message.addTarget(address);
-            }
-            eventAggregator.publish(message);
-        } catch (UnknownHostException e) {
-            LOGGER.debug("Issue sending message", e);
-        }
+        return Guice.createInjector(new DistributorModule(), new TestModule());
     }
 }

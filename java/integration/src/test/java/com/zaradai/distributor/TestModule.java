@@ -15,18 +15,12 @@
  */
 package com.zaradai.distributor;
 
-public class TestEvent {
-    private int test;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
 
-    public TestEvent() {
-        test = 42;
-    }
-
-    public int getTest() {
-        return test;
-    }
-
-    public void setTest(int test) {
-        this.test = test;
+public class TestModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        bind(PingPongTester.class).in(Singleton.class);
     }
 }
