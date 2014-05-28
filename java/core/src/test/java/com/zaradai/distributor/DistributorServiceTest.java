@@ -16,9 +16,11 @@
 package com.zaradai.distributor;
 
 import com.google.common.collect.Sets;
+import com.zaradai.distributor.config.DistributorConfig;
 import com.zaradai.distributor.messaging.Message;
 import com.zaradai.distributor.messaging.MessagingService;
 import com.zaradai.events.EventAggregator;
+import com.zaradai.mocks.DistributorConfigMocker;
 import com.zaradai.mocks.EventAggregatorMocker;
 import com.zaradai.mocks.MessageMocker;
 import com.zaradai.mocks.MessagingServiceMocker;
@@ -37,12 +39,15 @@ public class DistributorServiceTest {
     private EventAggregator eventAggregator;
     private MessagingService messagingService;
     private DistributorService uut;
+    private DistributorConfig config;
 
     @Before
     public void setUp() throws Exception {
         eventAggregator = EventAggregatorMocker.create();
         messagingService = MessagingServiceMocker.create();
-        uut = new DistributorService(eventAggregator, messagingService);
+        config = DistributorConfigMocker.create();
+
+        uut = new DistributorService(eventAggregator, messagingService, config);
     }
 
     @Test

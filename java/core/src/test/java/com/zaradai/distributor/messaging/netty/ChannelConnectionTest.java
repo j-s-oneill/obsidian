@@ -27,12 +27,16 @@ import com.zaradai.mocks.NettyClientMocker;
 import com.zaradai.util.LoggerTester;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Matchers;
 
 import java.net.InetSocketAddress;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -74,7 +78,7 @@ public class ChannelConnectionTest {
     public void shouldAddCloseListenerOnSetChannel() throws Exception {
         uut.setChannel(channel);
 
-        verify(future).addListener(uut.lostNotifier);
+        verify(future).addListener((GenericFutureListener<? extends Future<? super Void>>) Matchers.any());
     }
 
     @Test
@@ -100,7 +104,7 @@ public class ChannelConnectionTest {
 
         uut.setChannel(null);
 
-        verify(future).removeListener(uut.lostNotifier);
+        verify(future).removeListener((GenericFutureListener<? extends Future<? super Void>>) Matchers.any());
     }
 
     @Test
@@ -146,13 +150,13 @@ public class ChannelConnectionTest {
     public void shouldPublishOnSuccess() throws Exception {
         uut.onSuccess(MessageMocker.create());
 
-        verify(eventPublisher).publish(any(MessageSentEvent.class));
+        verify(eventPublisher).publish(Matchers.any(MessageSentEvent.class));
     }
 
     @Test
     public void shouldPublishOnFailure() throws Exception {
         uut.onFailure(MessageMocker.create(), new Exception());
 
-        verify(eventPublisher).publish(any(MessageErrorEvent.class));
+        verify(eventPublisher).publish(Matchers.any(MessageErrorEvent.class));
     }
 }
